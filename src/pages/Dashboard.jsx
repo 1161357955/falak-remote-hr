@@ -5,11 +5,14 @@ import { Link } from "react-router-dom";
 import StatCard from "@/components/shared/StatCard";
 import PageHeader from "@/components/shared/PageHeader";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import ComplianceOverview from "@/components/dashboard/ComplianceOverview";
+import ReportChannels from "@/components/dashboard/ReportChannels";
 
 export default function Dashboard() {
   const [stats, setStats] = useState({ companies: 0, workers: 0, projects: 0, tasks: 0 });
   const [recentTasks, setRecentTasks] = useState([]);
   const [tasksByStatus, setTasksByStatus] = useState([]);
+  const [compliancePoints, setCompliancePoints] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,11 +21,12 @@ export default function Dashboard() {
 
   const loadData = async () => {
     try {
-      const [companies, workers, projects, tasks] = await Promise.all([
+      const [companies, workers, projects, tasks, logs] = await Promise.all([
         base44.entities.Company.list(),
         base44.entities.RemoteWorker.list(),
         base44.entities.Project.list(),
         base44.entities.Task.list("-created_date", 50),
+        base44.entities.PerformanceLog.list("-date", 200),
       ]);
 
       setStats({
@@ -39,6 +43,8 @@ export default function Dashboard() {
       setTasksByStatus(
         Object.entries(statusCounts).map(([name, value]) => ({ name, value }))
       );
+
+      setCompliancePoints(computeCompliancePoints(workers, tasks, logs));
     } catch (e) {
       console.error(e);
     } finally {
@@ -47,6 +53,51 @@ export default function Dashboard() {
   };
 
   const PIE_COLORS = ["#3b82f6", "#f59e0b", "#10b981", "#ef4444"];
+
+  function computeCompliancePoints(workers, tasks, logs) {
+    const total = workers.length || 1;
+    const pct = (count) => (count / total) * 100;
+    const filled = (key) => workers.filter((w) => w[key] !== undefined && w[key] !== null && w[key] !== "").length;
+
+    const workerTasks = (id) => tasks.filter((t) => t.worker_id === id);
+    const workerLogs = (id) => logs.filter((l) => l.worker_id === id);
+
+    const totalAssigned = tasks.length;
+    const totalCompleted = tasks.filter((t) => t.status === "مكتملة").length;
+    const completionRate = totalAssigned ? (totalCompleted / totalAssigned) * 100 : 0;
+
+    const goodActivityLogs = logs.filter((l) => ["ممتاز", "جيد جداً", "جيد"].includes(l.activity_level)).length;
+    const activityRate = logs.length ? (goodActivityLogs / logs.length) * 100 : 0;
+
+    const workersWithLogs = workers.filter((w) => workerLogs(w.id).length > 0).length;
+    const workersWithTasks = workers.filter((w) => workerTasks(w.id).length > 0).length;
+    const activeWorkers = workers.filter((w) => w.status === "نشط").length;
+
+    return [
+      { label: "اكتمال الاسم الكامل", value: pct(filled("full_name")) },
+      { label: "اكتمال رقم الهوية", value: pct(filled("national_id")) },
+      { label: "تحديد الجنس", value: pct(filled("gender")) },
+      { label: "تسجيل حالة الإعاقة", value: pct(workers.filter((w) => w.is_disabled !== undefined).length) },
+      { label: "تسجيل رقم الجوال", value: pct(filled("phone")) },
+      { label: "تسجيل البريد الإلكتروني", value: pct(filled("email")) },
+      { label: "تحديد المدينة", value: pct(filled("city")) },
+      { label: "تحديد المنطقة", value: pct(filled("region")) },
+      { label: "تحديد المسمى الوظيفي", value: pct(filled("job_title")) },
+      { label: "تحديد نوع الدوام", value: pct(filled("work_type")) },
+      { label: "تسجيل الراتب", value: pct(filled("salary")) },
+      { label: "الربط بمنشأة", value: pct(filled("company_id")) },
+      { label: "نشاط حالة العقد", value: pct(activeWorkers) },
+      { label: "تسجيل تاريخ بداية العقد", value: pct(filled("contract_start")) },
+      { label: "تسجيل تاريخ نهاية العقد", value: pct(filled("contract_end")) },
+      { label: "تحديد أيام العمل المتفق عليها", value: pct(filled("agreed_work_days")) },
+      { label: "تحديد أيام الإجازة السنوية", value: pct(filled("annual_leave_days")) },
+      { label: "وجود مهام موكلة للموظفين", value: pct(workersWithTasks) },
+      { label: "نسبة إنجاز المهام الإجمالية", value: completionRate },
+      { label: "تسجيل سجلات ساعات العمل", value: pct(workersWithLogs) },
+      { label: "انتظام تسجيل الدخول والخروج", value: pct(workersWithLogs) },
+      { label: "مستوى النشاط العام (جيد فأعلى)", value: activityRate },
+    ];
+  }
 
   if (loading) {
     return (
@@ -120,11 +171,17 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <QuickLink to="/companies" icon={Building2} label="إضافة منشأة" color="bg-blue-50 text-blue-700" />
         <QuickLink to="/workers" icon={Users} label="إضافة موظف" color="bg-amber-50 text-amber-700" />
         <QuickLink to="/projects" icon={FolderKanban} label="إنشاء مشروع" color="bg-emerald-50 text-emerald-700" />
       </div>
+
+      <div className="mb-8">
+        <ComplianceOverview points={compliancePoints} />
+      </div>
+
+      <ReportChannels />
     </div>
   );
 }
