@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { ClipboardList, Plus, Pencil, Trash2, Search } from "lucide-react";
+import { ClipboardList, Plus, Pencil, Trash2, Search, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import PageHeader from "@/components/shared/PageHeader";
 import EmptyState from "@/components/shared/EmptyState";
 import FormDialog from "@/components/shared/FormDialog";
+import TaskCommentsDialog from "@/components/tasks/TaskCommentsDialog";
 import { useToast } from "@/components/ui/use-toast";
 
 const emptyForm = {
@@ -26,6 +27,7 @@ export default function Tasks() {
   const [editId, setEditId] = useState(null);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("الكل");
+  const [commentsTask, setCommentsTask] = useState(null);
   const { toast } = useToast();
 
   useEffect(() => { loadData(); }, []);
@@ -141,6 +143,7 @@ export default function Tasks() {
                 </div>
               </div>
               <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" onClick={() => setCommentsTask(t)}><MessageSquare className="w-4 h-4" /></Button>
                 <Button variant="ghost" size="icon" onClick={() => handleEdit(t)}><Pencil className="w-4 h-4" /></Button>
                 <Button variant="ghost" size="icon" className="text-red-500" onClick={() => handleDelete(t.id)}><Trash2 className="w-4 h-4" /></Button>
               </div>
@@ -190,6 +193,8 @@ export default function Tasks() {
           <Button onClick={handleSave} className="w-full">{editId ? "تحديث" : "إضافة"}</Button>
         </div>
       </FormDialog>
+
+      <TaskCommentsDialog open={!!commentsTask} onOpenChange={(v) => !v && setCommentsTask(null)} task={commentsTask} />
     </div>
   );
 }

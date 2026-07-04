@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PageHeader from "@/components/shared/PageHeader";
 import KanbanCard from "@/components/tasks/KanbanCard";
+import TaskCommentsDialog from "@/components/tasks/TaskCommentsDialog";
 import { useToast } from "@/components/ui/use-toast";
 
 const STATUSES = ["جديدة", "قيد التنفيذ", "مكتملة", "ملغاة"];
@@ -18,6 +19,7 @@ export default function TasksKanban() {
   const [genProject, setGenProject] = useState("");
   const [generating, setGenerating] = useState(false);
   const [improving, setImproving] = useState(null);
+  const [commentsTask, setCommentsTask] = useState(null);
   const { toast } = useToast();
 
   useEffect(() => { loadData(); }, []);
@@ -138,6 +140,7 @@ export default function TasksKanban() {
                       projectName={getName(projects, task.project_id, "title")}
                       workerName={getName(workers, task.worker_id, "full_name")}
                       onImprove={handleImprove}
+                      onOpenComments={setCommentsTask}
                     />
                   ))}
                   {provided.placeholder}
@@ -152,6 +155,8 @@ export default function TasksKanban() {
           <Sparkles className="w-4 h-4 text-amber-500 animate-pulse" /> جارٍ تحسين المهمة...
         </div>
       )}
+
+      <TaskCommentsDialog open={!!commentsTask} onOpenChange={(v) => !v && setCommentsTask(null)} task={commentsTask} />
     </div>
   );
 }

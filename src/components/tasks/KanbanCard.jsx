@@ -1,6 +1,6 @@
 import React from "react";
 import { Draggable } from "@hello-pangea/dnd";
-import { Sparkles } from "lucide-react";
+import { Sparkles, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const priorityColor = {
@@ -10,7 +10,7 @@ const priorityColor = {
   "عاجلة": "bg-red-100 text-red-700",
 };
 
-export default function KanbanCard({ task, index, projectName, workerName, onImprove }) {
+export default function KanbanCard({ task, index, projectName, workerName, onImprove, onOpenComments }) {
   return (
     <Draggable draggableId={task.id} index={index}>
       {(provided, snapshot) => (
@@ -22,9 +22,14 @@ export default function KanbanCard({ task, index, projectName, workerName, onImp
         >
           <div className="flex items-start justify-between gap-2 mb-1">
             <h4 className="text-sm font-bold">{task.title}</h4>
-            <Button variant="ghost" size="icon" className="w-6 h-6 text-amber-500 shrink-0" onClick={() => onImprove(task)}>
-              <Sparkles className="w-3.5 h-3.5" />
-            </Button>
+            <div className="flex items-center shrink-0">
+              <Button variant="ghost" size="icon" className="w-6 h-6 text-muted-foreground" onClick={() => onOpenComments(task)}>
+                <MessageSquare className="w-3.5 h-3.5" />
+              </Button>
+              <Button variant="ghost" size="icon" className="w-6 h-6 text-amber-500" onClick={() => onImprove(task)}>
+                <Sparkles className="w-3.5 h-3.5" />
+              </Button>
+            </div>
           </div>
           {task.description && <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{task.description}</p>}
           <div className="flex items-center justify-between text-xs text-muted-foreground">
