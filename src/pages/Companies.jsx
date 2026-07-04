@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Building2, Plus, Pencil, Trash2, Search, UploadCloud, Paperclip, Loader2, FileText } from "lucide-react";
+import { Building2, Plus, Pencil, Trash2, Search, UploadCloud, FileText, Link2, MapPin } from "lucide-react";
+import "leaflet/dist/leaflet.css";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,12 +10,15 @@ import PageHeader from "@/components/shared/PageHeader";
 import EmptyState from "@/components/shared/EmptyState";
 import FormDialog from "@/components/shared/FormDialog";
 import CompanyImportDialog from "@/components/companies/CompanyImportDialog";
+import CompanyDocumentsField from "@/components/companies/CompanyDocumentsField";
+import CompanyLinksField from "@/components/companies/CompanyLinksField";
+import CompanyLocationPicker from "@/components/companies/CompanyLocationPicker";
 import { useToast } from "@/components/ui/use-toast";
 
 const emptyForm = {
   name: "", registration_number: "", commercial_register: "", activity_type: "",
   city: "", region: "", nitaqat_color: "", contact_person: "", phone: "", email: "",
-  contract_status: "نشط", notes: "",
+  contract_status: "نشط", notes: "", documents: [], links: [], latitude: null, longitude: null,
 };
 
 export default function Companies() {
@@ -25,7 +29,6 @@ export default function Companies() {
   const [editId, setEditId] = useState(null);
   const [search, setSearch] = useState("");
   const [importOpen, setImportOpen] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => { loadData(); }, []);
@@ -58,18 +61,6 @@ export default function Companies() {
     setForm({ ...emptyForm, ...c });
     setEditId(c.id);
     setDialogOpen(true);
-  };
-
-  const handleUploadDocument = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      setForm((f) => ({ ...f, document_url: file_url }));
-    } finally {
-      setUploading(false);
-    }
   };
 
   const handleDelete = async (id) => {
@@ -136,9 +127,23 @@ export default function Companies() {
                 {c.city && <p>المدينة: {c.city}</p>}
                 {c.nitaqat_color && <p>النطاق: {c.nitaqat_color}</p>}
                 {c.contact_person && <p>مسؤول التواصل: {c.contact_person}</p>}
-                {c.document_url && (
-                  <a href={c.document_url} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-primary hover:underline">
-                    <FileText className="w-3.5 h-3.5" /> عرض المستند المرفق
+                {c.documents?.length > 0 && (
+                  <p className="flex items-center gap-1">
+                    <FileText className="w-3.5 h-3.5" /> {c.documents.length} مستند مرفق
+                  </p>
+                )}
+                {c.links?.length > 0 && (
+                  <p className="flex items-center gap-1">
+                    <Link2 className="w-3.5 h-3.5" /> {c.links.length} رابط
+                  </p>
+                )}
+                {c.latitude && c.longitude && (
+                  <a
+                    href={`https://www.google.com/maps?q=${c.latitude},${c.longitude}`}
+                    target="_blank" rel="noreferrer"
+                    className="flex items-center gap-1 text-primary hover:underline"
+                  >
+                    <MapPin className="w-3.5 h-3.5" /> عرض الموقع على الخريطة
                   </a>
                 )}
               </div>
@@ -198,17 +203,13 @@ export default function Companies() {
             <div><Label>الهاتف</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
           </div>
           <div><Label>البريد الإلكتروني</Label><Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
-          <div>
-            <Label>المستند المرفق</Label>
-            <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer hover:text-foreground border rounded-md px-3 py-2 w-fit">
-              {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
-              {form.document_url ? "تم إرفاق مستند" : "إرفاق مستند"}
-              <input type="file" className="hidden" onChange={handleUploadDocument} />
-            </label>
-            {form.document_url && (
-              <a href={form.document_url} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline mt-1 inline-block">عرض المستند الحالي</a>
-            )}
-          </div>
+          <CompanyDocumentsField documents={form.documents} onChange={(documents) => setForm({ ...form, documents })} />
+          <CompanyLinksField links={form.links} onChange={(links) => setForm({ ...form, links })} />
+          <CompanyLocationPicker
+            latitude={form.latitude}
+            longitude={form.longitude}
+            onChange={(latitude, longitude) => setForm({ ...form, latitude, longitude })}
+          />
           <Button onClick={handleSave} className="w-full">{editId ? "تحديث" : "إضافة"}</Button>
         </div>
       </FormDialog>

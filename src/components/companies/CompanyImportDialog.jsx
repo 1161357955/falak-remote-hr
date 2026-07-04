@@ -62,7 +62,7 @@ export default function CompanyImportDialog({ open, onOpenChange, onImported }) 
       }
       const records = result.output.companies
         .filter((c) => c.name)
-        .map((c) => ({ registration_number: "", contract_status: "نشط", ...c, document_url: file_url }));
+        .map((c) => ({ registration_number: "", contract_status: "نشط", ...c, documents: [{ name: file.name, url: file_url }] }));
       await base44.entities.Company.bulkCreate(records);
       toast({ title: "تم الترحيل", description: `تم إضافة ${records.length} منشأة بنجاح` });
       onImported();
