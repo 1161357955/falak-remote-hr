@@ -30,10 +30,29 @@ Deno.serve(async (req) => {
       const worker = workersById[task.worker_id];
       if (!worker || !worker.email) continue;
 
+      const emailHtml = `
+      <div dir="rtl" style="font-family: Tajawal, Arial, sans-serif; background-color: #f3f4f6; padding: 24px;">
+        <div style="max-width: 480px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+          <div style="background: #16336b; padding: 20px 24px;">
+            <h1 style="color: #ffffff; font-size: 18px; margin: 0;">فلك للموارد البشرية</h1>
+          </div>
+          <div style="padding: 28px 24px;">
+            <p style="font-size: 15px; color: #111827; margin: 0 0 16px 0;">مرحباً <strong>${worker.full_name}</strong>،</p>
+            <p style="font-size: 14px; color: #374151; margin: 0 0 20px 0;">نود تذكيرك بأن موعد تسليم إحدى مهامك يقترب، يرجى إتمامها في الوقت المحدد.</p>
+            <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px;">
+              <p style="margin: 0 0 8px 0; font-size: 14px;"><span style="color: #6b7280;">المهمة:</span> <strong style="color: #16336b;">${task.title}</strong></p>
+              <p style="margin: 0 0 8px 0; font-size: 14px;"><span style="color: #6b7280;">تاريخ التسليم:</span> <strong>${task.due_date}</strong></p>
+              <p style="margin: 0; font-size: 14px;"><span style="color: #6b7280;">الأولوية:</span> <strong>${task.priority || "متوسطة"}</strong></p>
+            </div>
+            <p style="font-size: 13px; color: #9ca3af; margin: 24px 0 0 0;">مع تحيات فريق فلك للموارد البشرية</p>
+          </div>
+        </div>
+      </div>`;
+
       await base44.asServiceRole.integrations.Core.SendEmail({
         to: worker.email,
         subject: `تذكير: اقتراب موعد تسليم مهمة "${task.title}"`,
-        body: `مرحباً ${worker.full_name},\n\nنود تذكيرك بأن موعد تسليم المهمة التالية يقترب:\n\nالمهمة: ${task.title}\nتاريخ التسليم: ${task.due_date}\nالأولوية: ${task.priority || "متوسطة"}\n\nيرجى إتمام المهمة في الوقت المحدد.\n\nمع تحيات فريق فلك للموارد البشرية`,
+        body: emailHtml,
         from_name: "فلك للموارد البشرية",
       });
       remindersSent++;
