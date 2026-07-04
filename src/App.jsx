@@ -22,6 +22,7 @@ import TasksKanban from '@/pages/TasksKanban';
 import Reports from '@/pages/Reports';
 import ClientPortal from '@/pages/ClientPortal';
 import WorkerReport from '@/pages/WorkerReport';
+import CompanyDetail from '@/pages/CompanyDetail';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -53,6 +54,7 @@ const AuthenticatedApp = () => {
         <Route element={<AppLayout />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/companies" element={<Companies />} />
+          <Route path="/company/:id" element={<CompanyDetail />} />
           <Route path="/workers" element={<Workers />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/tasks" element={<Tasks />} />

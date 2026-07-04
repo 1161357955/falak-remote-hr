@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Building2, Users, FolderKanban, ClipboardList, TrendingUp, Clock } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import StatCard from "@/components/shared/StatCard";
 import PageHeader from "@/components/shared/PageHeader";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
@@ -14,10 +14,25 @@ export default function Dashboard() {
   const [tasksByStatus, setTasksByStatus] = useState([]);
   const [compliancePoints, setCompliancePoints] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
+    checkCompanyRedirect();
     loadData();
   }, []);
+
+  const checkCompanyRedirect = async () => {
+    try {
+      const user = await base44.auth.me();
+      if (!user?.email || user.role === "admin") return;
+      const companies = await base44.entities.Company.filter({ email: user.email });
+      if (companies.length === 1) {
+        navigate(`/company/${companies[0].id}`, { replace: true });
+      }
+    } catch (e) {
+      // ignore, fall back to admin dashboard
+    }
+  };
 
   const loadData = async () => {
     try {

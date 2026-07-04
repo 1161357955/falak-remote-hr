@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Building2, Plus, Pencil, Trash2, Search, UploadCloud, FileText, Link2, MapPin } from "lucide-react";
+import { Building2, Plus, Pencil, Trash2, Search, UploadCloud, FileText, Link2, MapPin, LayoutGrid } from "lucide-react";
+import { Link } from "react-router-dom";
 import "leaflet/dist/leaflet.css";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -148,6 +149,11 @@ export default function Companies() {
                 )}
               </div>
               <div className="flex items-center gap-2 border-t pt-3">
+                <Link to={`/company/${c.id}`}>
+                  <Button variant="ghost" size="sm">
+                    <LayoutGrid className="w-3.5 h-3.5 ml-1" /> لوحة المنشأة
+                  </Button>
+                </Link>
                 <Button variant="ghost" size="sm" onClick={() => handleEdit(c)}>
                   <Pencil className="w-3.5 h-3.5 ml-1" /> تعديل
                 </Button>
