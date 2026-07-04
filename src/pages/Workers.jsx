@@ -65,9 +65,13 @@ export default function Workers() {
   };
 
   const handleDelete = async (id) => {
-    await base44.entities.RemoteWorker.delete(id);
+    try {
+      await base44.entities.RemoteWorker.delete(id);
+      toast({ title: "تم الحذف" });
+    } catch {
+      toast({ title: "الموظف غير موجود بالفعل", variant: "destructive" });
+    }
     loadData();
-    toast({ title: "تم الحذف" });
   };
 
   const filtered = workers.filter((w) =>
