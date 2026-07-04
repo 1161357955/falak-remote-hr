@@ -18,6 +18,7 @@ import Companies from '@/pages/Companies';
 import Workers from '@/pages/Workers';
 import Projects from '@/pages/Projects';
 import Tasks from '@/pages/Tasks';
+import TasksKanban from '@/pages/TasksKanban';
 import Reports from '@/pages/Reports';
 import ClientPortal from '@/pages/ClientPortal';
 import WorkerReport from '@/pages/WorkerReport';
@@ -55,6 +56,7 @@ const AuthenticatedApp = () => {
           <Route path="/workers" element={<Workers />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/tasks" element={<Tasks />} />
+          <Route path="/tasks-kanban" element={<TasksKanban />} />
           <Route path="/reports" element={<Reports />} />
         </Route>
       </Route>
