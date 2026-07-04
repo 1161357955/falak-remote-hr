@@ -13,7 +13,6 @@ import CompanyImportDialog from "@/components/companies/CompanyImportDialog";
 import CompanyDocumentsField from "@/components/companies/CompanyDocumentsField";
 import CompanyLinksField from "@/components/companies/CompanyLinksField";
 import CompanyLocationPicker from "@/components/companies/CompanyLocationPicker";
-import CompanyMiniMap from "@/components/companies/CompanyMiniMap";
 import { useToast } from "@/components/ui/use-toast";
 
 const emptyForm = {
@@ -139,16 +138,13 @@ export default function Companies() {
                   </p>
                 )}
                 {c.latitude && c.longitude && (
-                  <div onClick={(e) => e.stopPropagation()}>
-                    <CompanyMiniMap latitude={c.latitude} longitude={c.longitude} />
-                    <a
-                      href={`https://www.google.com/maps?q=${c.latitude},${c.longitude}`}
-                      target="_blank" rel="noreferrer"
-                      className="flex items-center gap-1 text-primary hover:underline"
-                    >
-                      <MapPin className="w-3.5 h-3.5" /> عرض الموقع على الخريطة
-                    </a>
-                  </div>
+                  <a
+                    href={`https://www.google.com/maps?q=${c.latitude},${c.longitude}`}
+                    target="_blank" rel="noreferrer"
+                    className="flex items-center gap-1 text-primary hover:underline"
+                  >
+                    <MapPin className="w-3.5 h-3.5" /> عرض الموقع على الخريطة
+                  </a>
                 )}
               </div>
               <div className="flex items-center gap-2 border-t pt-3">
