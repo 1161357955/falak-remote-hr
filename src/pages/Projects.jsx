@@ -13,9 +13,11 @@ import FormDialog from "@/components/shared/FormDialog";
 import { useToast } from "@/components/ui/use-toast";
 
 const emptyForm = {
-  title: "", description: "", company_id: "", status: "جديد",
+  title: "", description: "", company_id: "", category: "عام", status: "جديد",
   start_date: "", end_date: "", budget: "", progress: 0,
 };
+
+const PROJECT_CATEGORIES = ["برنامج الإدارة الرشيدة", "أنظمة البرمجيات كخدمة", "المشاريع الرقمية", "عام"];
 
 export default function Projects() {
   const [projects, setProjects] = useState([]);
@@ -105,6 +107,9 @@ export default function Projects() {
                 <h3 className="font-bold">{p.title}</h3>
                 <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColor[p.status] || ""}`}>{p.status}</span>
               </div>
+              {p.category && p.category !== "عام" && (
+                <span className="inline-block text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium mb-2">{p.category}</span>
+              )}
               {p.description && <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{p.description}</p>}
               <div className="text-xs text-muted-foreground space-y-1 mb-3">
                 <p>المنشأة: {getCompanyName(p.company_id)}</p>
@@ -138,6 +143,13 @@ export default function Projects() {
             <Select value={form.company_id} onValueChange={(v) => setForm({ ...form, company_id: v })}>
               <SelectTrigger><SelectValue placeholder="اختر المنشأة" /></SelectTrigger>
               <SelectContent>{companies.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>قائمة المشروع</Label>
+            <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>{PROJECT_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div>
