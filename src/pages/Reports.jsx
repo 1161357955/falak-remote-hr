@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { BarChart3, Plus, Search, Clock, Target, Activity } from "lucide-react";
+import { BarChart3, Plus, Search, Clock, Target, Activity, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -92,7 +92,7 @@ export default function Reports() {
         </Button>
       </PageHeader>
 
-      <div className="flex flex-wrap gap-3 mb-6">
+      <div className="flex flex-wrap gap-3 mb-6 items-center">
         <Select value={filterWorker} onValueChange={setFilterWorker}>
           <SelectTrigger className="w-48"><SelectValue placeholder="تصفية حسب الموظف" /></SelectTrigger>
           <SelectContent>
@@ -100,6 +100,15 @@ export default function Reports() {
             {workers.map((w) => <SelectItem key={w.id} value={w.id}>{w.full_name}</SelectItem>)}
           </SelectContent>
         </Select>
+        {filterWorker !== "الكل" && (
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={() => window.open(`/worker-report?id=${filterWorker}`, "_blank")}
+          >
+            <FileText className="w-4 h-4" /> توليد تقرير الـ22 نقطة
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">

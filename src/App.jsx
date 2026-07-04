@@ -20,6 +20,7 @@ import Projects from '@/pages/Projects';
 import Tasks from '@/pages/Tasks';
 import Reports from '@/pages/Reports';
 import ClientPortal from '@/pages/ClientPortal';
+import WorkerReport from '@/pages/WorkerReport';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -58,6 +59,9 @@ const AuthenticatedApp = () => {
         </Route>
       </Route>
       <Route path="/client-portal" element={<ClientPortal />} />
+      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
+        <Route path="/worker-report" element={<WorkerReport />} />
+      </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
