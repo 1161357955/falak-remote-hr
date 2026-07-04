@@ -1,5 +1,5 @@
 import React from "react";
-import { Paperclip } from "lucide-react";
+import { Paperclip, Link2 } from "lucide-react";
 
 const EMOJIS = ["👍", "❤️", "😂", "🎉", "👀"];
 
@@ -19,11 +19,18 @@ export default function CommentItem({ comment, currentUserEmail, onToggleReactio
         </span>
       </div>
       <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
-      {comment.file_url && (
-        <a href={comment.file_url} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1 text-xs text-primary hover:underline">
-          <Paperclip className="w-3 h-3" /> مرفق
-        </a>
-      )}
+      <div className="flex items-center gap-3 mt-2">
+        {comment.file_url && (
+          <a href={comment.file_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+            <Paperclip className="w-3 h-3" /> مرفق
+          </a>
+        )}
+        {comment.link_url && (
+          <a href={comment.link_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-primary hover:underline truncate max-w-[200px]">
+            <Link2 className="w-3 h-3" /> {comment.link_url}
+          </a>
+        )}
+      </div>
       <div className="flex items-center gap-1 mt-2 flex-wrap">
         {EMOJIS.map((emoji) => {
           const authors = grouped[emoji] || [];

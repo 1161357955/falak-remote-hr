@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Send, Paperclip, Loader2 } from "lucide-react";
+import { Send, Paperclip, Loader2, Link2, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import FormDialog from "@/components/shared/FormDialog";
@@ -10,6 +11,8 @@ export default function TaskCommentsDialog({ open, onOpenChange, task }) {
   const [comments, setComments] = useState([]);
   const [content, setContent] = useState("");
   const [fileUrl, setFileUrl] = useState("");
+  const [linkUrl, setLinkUrl] = useState("");
+  const [showLinkInput, setShowLinkInput] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState(false);
   const [user, setUser] = useState(null);
@@ -34,7 +37,7 @@ export default function TaskCommentsDialog({ open, onOpenChange, task }) {
   };
 
   const handleSend = async () => {
-    if (!content.trim() && !fileUrl) return;
+    if (!content.trim() && !fileUrl && !linkUrl) return;
     setSending(true);
     try {
       await base44.entities.TaskComment.create({
@@ -43,10 +46,13 @@ export default function TaskCommentsDialog({ open, onOpenChange, task }) {
         author_email: user?.email || "",
         content,
         file_url: fileUrl,
+        link_url: linkUrl,
         reactions: [],
       });
       setContent("");
       setFileUrl("");
+      setLinkUrl("");
+      setShowLinkInput(false);
       const updated = await base44.entities.TaskComment.filter({ task_id: task.id }, "created_date");
       setComments(updated);
     } finally {
@@ -81,12 +87,25 @@ export default function TaskCommentsDialog({ open, onOpenChange, task }) {
         </div>
         <div className="border-t pt-3 space-y-2">
           <Textarea placeholder="اكتب تعليقاً..." value={content} onChange={(e) => setContent(e.target.value)} rows={2} />
+          {showLinkInput && (
+            <div className="flex items-center gap-2">
+              <Input placeholder="https://..." value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} className="text-sm" />
+              <Button variant="ghost" size="icon" className="w-8 h-8 shrink-0" onClick={() => { setLinkUrl(""); setShowLinkInput(false); }}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
           <div className="flex items-center justify-between gap-2">
-            <label className="flex items-center gap-1 text-xs text-muted-foreground cursor-pointer hover:text-foreground">
-              {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
-              {fileUrl ? "تم إرفاق ملف" : "إرفاق ملف"}
-              <input type="file" className="hidden" onChange={handleUpload} />
-            </label>
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-1 text-xs text-muted-foreground cursor-pointer hover:text-foreground">
+                {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
+                {fileUrl ? "تم إرفاق ملف" : "إرفاق ملف"}
+                <input type="file" className="hidden" onChange={handleUpload} />
+              </label>
+              <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground" onClick={() => setShowLinkInput((v) => !v)}>
+                <Link2 className="w-4 h-4" /> إرفاق رابط
+              </button>
+            </div>
             <Button size="sm" onClick={handleSend} disabled={sending} className="gap-1">
               <Send className="w-3.5 h-3.5" /> إرسال
             </Button>
