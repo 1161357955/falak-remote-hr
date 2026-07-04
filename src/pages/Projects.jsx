@@ -19,6 +19,21 @@ const emptyForm = {
 
 const PROJECT_CATEGORIES = ["برنامج الإدارة الرشيدة", "أنظمة البرمجيات كخدمة", "المشاريع الرقمية", "عام"];
 
+const GOVERNANCE_TASKS = [
+  "حجز الاسم التجاري",
+  "إصدار السجل التجاري",
+  "فتح ملف المنشأة في وزارة الموارد البشرية والتنمية الاجتماعية",
+  "تسجيل المنشأة في التأمينات الاجتماعية",
+  "استئجار موقع للمنشأة",
+  "استخراج موافقة الدفاع المدني",
+  "استخراج رخصة البلدية",
+  "استخراج التأشيرات",
+  "تصميم العلامة التجارية",
+  "إطلاق الحملة التسويقية",
+  "إطلاق المنشأة",
+  "التوسع في العمل",
+];
+
 export default function Projects() {
   const [projects, setProjects] = useState([]);
   const [companies, setCompanies] = useState([]);
@@ -50,13 +65,21 @@ export default function Projects() {
       return;
     }
     const data = { ...form, budget: form.budget ? Number(form.budget) : undefined, progress: Number(form.progress) };
-    if (editId) await base44.entities.Project.update(editId, data);
-    else await base44.entities.Project.create(data);
+    if (editId) {
+      await base44.entities.Project.update(editId, data);
+    } else {
+      const newProject = await base44.entities.Project.create(data);
+      if (data.category === "برنامج الإدارة الرشيدة") {
+        await base44.entities.Task.bulkCreate(
+          GOVERNANCE_TASKS.map((title) => ({ title, project_id: newProject.id, status: "جديدة" }))
+        );
+      }
+    }
     setDialogOpen(false);
     setForm(emptyForm);
     setEditId(null);
     loadData();
-    toast({ title: editId ? "تم التحديث" : "تمت الإضافة" });
+    toast({ title: editId ? "تم التحديث" : "تمت الإضافة", description: !editId && data.category === "برنامج الإدارة الرشيدة" ? "تم إنشاء قائمة مهام برنامج الإدارة الرشيدة، يمكنك الآن إسنادها للموظفين" : undefined });
   };
 
   const handleEdit = (p) => {
