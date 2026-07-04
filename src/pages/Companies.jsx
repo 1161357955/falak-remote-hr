@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Building2, Plus, Pencil, Trash2, Search } from "lucide-react";
+import { Building2, Plus, Pencil, Trash2, Search, UploadCloud } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import PageHeader from "@/components/shared/PageHeader";
 import EmptyState from "@/components/shared/EmptyState";
 import FormDialog from "@/components/shared/FormDialog";
+import CompanyImportDialog from "@/components/companies/CompanyImportDialog";
 import { useToast } from "@/components/ui/use-toast";
 
 const emptyForm = {
@@ -23,6 +24,7 @@ export default function Companies() {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState(null);
   const [search, setSearch] = useState("");
+  const [importOpen, setImportOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => { loadData(); }, []);
@@ -80,10 +82,17 @@ export default function Companies() {
   return (
     <div>
       <PageHeader title="المنشآت" description="إدارة بيانات المنشآت وأصحاب الأعمال">
-        <Button onClick={() => { setForm(emptyForm); setEditId(null); setDialogOpen(true); }} className="gap-2">
-          <Plus className="w-4 h-4" /> إضافة منشأة
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button onClick={() => { setForm(emptyForm); setEditId(null); setDialogOpen(true); }} className="gap-2">
+            <Plus className="w-4 h-4" /> إضافة منشأة
+          </Button>
+          <Button variant="outline" size="icon" title="ترحيل ذكي للمنشآت" onClick={() => setImportOpen(true)}>
+            <UploadCloud className="w-4 h-4" />
+          </Button>
+        </div>
       </PageHeader>
+
+      <CompanyImportDialog open={importOpen} onOpenChange={setImportOpen} onImported={loadData} />
 
       <div className="relative mb-6 max-w-sm">
         <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
