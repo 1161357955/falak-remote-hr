@@ -1,13 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Printer } from "lucide-react";
+import { Printer, Mail, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import ReportField from "@/components/reports/ReportField";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function WorkerReport() {
   const urlParams = new URLSearchParams(window.location.search);
   const workerId = urlParams.get("id");
   const [data, setData] = useState(null);
+  const [email1, setEmail1] = useState("");
+  const [email2, setEmail2] = useState("");
+  const [sending, setSending] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => { loadData(); }, [workerId]);
 
@@ -31,6 +37,23 @@ export default function WorkerReport() {
       : "—";
 
     setData({ worker, company, tasksAssigned, tasksCompleted, completionRate, totalHours, loginCount, mostCommonActivity });
+  };
+
+  const handleSendEmail = async () => {
+    const emails = [email1, email2].map((e) => e.trim()).filter(Boolean);
+    if (emails.length === 0) {
+      toast({ title: "أدخل بريداً إلكترونياً واحداً على الأقل", variant: "destructive" });
+      return;
+    }
+    setSending(true);
+    try {
+      await base44.functions.invoke("sendWorkerReport", { workerId, emails });
+      toast({ title: "تم إرسال التقرير بنجاح" });
+    } catch (e) {
+      toast({ title: "تعذر إرسال التقرير", variant: "destructive" });
+    } finally {
+      setSending(false);
+    }
   };
 
   if (!workerId) return <div className="p-8 text-center text-muted-foreground">لم يتم تحديد الموظف</div>;
@@ -67,7 +90,14 @@ export default function WorkerReport() {
   return (
     <div className="min-h-screen bg-muted/30 py-8 px-4 print:bg-white print:py-0">
       <div className="max-w-3xl mx-auto">
-        <div className="flex justify-end mb-4 print:hidden">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4 print:hidden">
+          <div className="flex items-center gap-2 flex-1 flex-wrap">
+            <Input placeholder="البريد الإلكتروني الأول" type="email" value={email1} onChange={(e) => setEmail1(e.target.value)} className="w-56" />
+            <Input placeholder="بريد إلكتروني ثانٍ (اختياري)" type="email" value={email2} onChange={(e) => setEmail2(e.target.value)} className="w-56" />
+            <Button variant="outline" onClick={handleSendEmail} disabled={sending} className="gap-2">
+              {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />} إرسال بالبريد
+            </Button>
+          </div>
           <Button onClick={() => window.print()} className="gap-2">
             <Printer className="w-4 h-4" /> طباعة / حفظ PDF
           </Button>
