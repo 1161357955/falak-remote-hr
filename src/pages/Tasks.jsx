@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { ClipboardList, Plus, Pencil, Trash2, Search, MessageSquare, ChevronDown, ChevronUp } from "lucide-react";
+import { ClipboardList, Plus, Pencil, Trash2, Search, MessageSquare, ChevronDown, ChevronUp, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,6 +49,7 @@ export default function Tasks() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("الكل");
   const [expandedId, setExpandedId] = useState(null);
+  const [generating, setGenerating] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => { loadData(); }, []);
@@ -107,6 +108,38 @@ export default function Tasks() {
     await base44.entities.Task.delete(id);
     loadData();
     toast({ title: "تم الحذف" });
+  };
+
+  const handleGenerateWithAI = async () => {
+    if (!form.title) {
+      toast({ title: "أدخل عنوان المهمة أولاً", variant: "destructive" });
+      return;
+    }
+    setGenerating(true);
+    try {
+      const project = projects.find((p) => p.id === form.project_id);
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `اقترح تفاصيل مهمة عمل بعنوان "${form.title}"${project ? ` ضمن مشروع "${project.title}"` : ""}. أعطِ وصفاً واضحاً من 2-3 جمل، وأولوية مناسبة، وعدد ساعات مقدرة واقعية لإنجازها.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            description: { type: "string" },
+            priority: { type: "string", enum: ["منخفضة", "متوسطة", "عالية", "عاجلة"] },
+            estimated_hours: { type: "number" },
+          },
+        },
+      });
+      const est = decimalToHM(result.estimated_hours);
+      setForm((f) => ({
+        ...f,
+        description: result.description || f.description,
+        priority: result.priority || f.priority,
+        estimated_h: est.h, estimated_m: est.m,
+      }));
+      toast({ title: "تم توليد تفاصيل المهمة بالذكاء الاصطناعي" });
+    } finally {
+      setGenerating(false);
+    }
   };
 
   const filtered = tasks.filter((t) => {
@@ -192,7 +225,15 @@ export default function Tasks() {
 
       <FormDialog open={dialogOpen} onOpenChange={setDialogOpen} title={editId ? "تعديل مهمة" : "إضافة مهمة"}>
         <div className="space-y-4">
-          <div><Label>عنوان المهمة *</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
+          <div>
+            <Label>عنوان المهمة *</Label>
+            <div className="flex gap-2">
+              <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+              <Button type="button" variant="outline" className="gap-1.5 shrink-0" onClick={handleGenerateWithAI} disabled={generating}>
+                <Sparkles className="w-3.5 h-3.5" /> {generating ? "جارٍ التوليد..." : "توليد بالذكاء الاصطناعي"}
+              </Button>
+            </div>
+          </div>
           <div><Label>الوصف</Label><Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
           <div>
             <Label>المشروع *</Label>
