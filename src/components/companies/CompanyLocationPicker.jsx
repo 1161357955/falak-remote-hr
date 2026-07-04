@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Locate } from "lucide-react";
 import L from "leaflet";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
@@ -30,6 +31,7 @@ function ClickHandler({ onPick }) {
 
 export default function CompanyLocationPicker({ latitude, longitude, onChange }) {
   const [linkInput, setLinkInput] = useState("");
+  const [locating, setLocating] = useState(false);
   const position = latitude && longitude ? [latitude, longitude] : [24.7136, 46.6753];
 
   const handleApplyLink = () => {
@@ -38,10 +40,26 @@ export default function CompanyLocationPicker({ latitude, longitude, onChange })
     setLinkInput("");
   };
 
+  const handleUseCurrentLocation = () => {
+    if (!navigator.geolocation) return;
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        onChange(pos.coords.latitude, pos.coords.longitude);
+        setLocating(false);
+      },
+      () => setLocating(false)
+    );
+  };
+
   return (
     <div>
       <Label>موقع المنشأة على الخريطة</Label>
       <p className="text-xs text-muted-foreground mb-1.5">اضغط على الخريطة، أو الصق رابط جوجل مابس، أو أدخل الإحداثيات يدوياً</p>
+
+      <Button type="button" variant="outline" size="sm" className="gap-1.5 mb-2" onClick={handleUseCurrentLocation} disabled={locating}>
+        <Locate className="w-3.5 h-3.5" /> {locating ? "جاري تحديد الموقع..." : "استخدام موقعي الحالي"}
+      </Button>
 
       <div className="flex items-center gap-2 mb-2">
         <Input
