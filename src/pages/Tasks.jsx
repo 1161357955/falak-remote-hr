@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { ClipboardList, Plus, Pencil, Trash2, Search, MessageSquare } from "lucide-react";
+import { ClipboardList, Plus, Pencil, Trash2, Search, MessageSquare, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,12 +9,33 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import PageHeader from "@/components/shared/PageHeader";
 import EmptyState from "@/components/shared/EmptyState";
 import FormDialog from "@/components/shared/FormDialog";
-import TaskCommentsDialog from "@/components/tasks/TaskCommentsDialog";
+import HoursMinutesInput from "@/components/tasks/HoursMinutesInput";
+import TaskCommentsThread from "@/components/tasks/TaskCommentsThread";
 import { useToast } from "@/components/ui/use-toast";
 
 const emptyForm = {
   title: "", description: "", project_id: "", worker_id: "",
-  status: "جديدة", priority: "متوسطة", due_date: "", estimated_hours: "", actual_hours: 0,
+  status: "جديدة", priority: "متوسطة", due_date: "",
+  estimated_h: "", estimated_m: "", actual_h: "", actual_m: "",
+};
+
+const decimalToHM = (decimal) => {
+  const total = Number(decimal) || 0;
+  const h = Math.floor(total);
+  const m = Math.round((total - h) * 60);
+  return { h: h || "", m: m || "" };
+};
+
+const hmToDecimal = (h, m) => {
+  const hours = Number(h) || 0;
+  const minutes = Number(m) || 0;
+  return hours + minutes / 60;
+};
+
+const formatHours = (decimal) => {
+  const { h, m } = decimalToHM(decimal);
+  if (!h && !m) return "0د";
+  return `${h || 0}س ${m || 0}د`;
 };
 
 export default function Tasks() {
@@ -27,7 +48,7 @@ export default function Tasks() {
   const [editId, setEditId] = useState(null);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("الكل");
-  const [commentsTask, setCommentsTask] = useState(null);
+  const [expandedId, setExpandedId] = useState(null);
   const { toast } = useToast();
 
   useEffect(() => { loadData(); }, []);
@@ -55,7 +76,12 @@ export default function Tasks() {
       toast({ title: "خطأ", description: "العنوان والمشروع مطلوبان", variant: "destructive" });
       return;
     }
-    const data = { ...form, estimated_hours: form.estimated_hours ? Number(form.estimated_hours) : undefined, actual_hours: Number(form.actual_hours) };
+    const { estimated_h, estimated_m, actual_h, actual_m, ...rest } = form;
+    const data = {
+      ...rest,
+      estimated_hours: (estimated_h || estimated_m) ? hmToDecimal(estimated_h, estimated_m) : undefined,
+      actual_hours: hmToDecimal(actual_h, actual_m),
+    };
     if (editId) await base44.entities.Task.update(editId, data);
     else await base44.entities.Task.create(data);
     setDialogOpen(false);
@@ -66,7 +92,13 @@ export default function Tasks() {
   };
 
   const handleEdit = (t) => {
-    setForm({ ...emptyForm, ...t, estimated_hours: t.estimated_hours || "" });
+    const est = decimalToHM(t.estimated_hours);
+    const act = decimalToHM(t.actual_hours);
+    setForm({
+      ...emptyForm, ...t,
+      estimated_h: est.h, estimated_m: est.m,
+      actual_h: act.h, actual_m: act.m,
+    });
     setEditId(t.id);
     setDialogOpen(true);
   };
@@ -128,25 +160,31 @@ export default function Tasks() {
       ) : (
         <div className="space-y-3">
           {filtered.map((t) => (
-            <div key={t.id} className="bg-card border rounded-2xl p-5 hover:shadow-sm transition-shadow flex items-center justify-between gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-1">
-                  <h3 className="font-bold text-sm">{t.title}</h3>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${priorityColor[t.priority] || ""}`}>{t.priority}</span>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${statusColor[t.status] || ""}`}>{t.status}</span>
+            <div key={t.id} className="bg-card border rounded-2xl hover:shadow-sm transition-shadow">
+              <div className="p-5 flex items-center justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-1">
+                    <h3 className="font-bold text-sm">{t.title}</h3>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${priorityColor[t.priority] || ""}`}>{t.priority}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${statusColor[t.status] || ""}`}>{t.status}</span>
+                  </div>
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <span>المشروع: {getName(projects, t.project_id)}</span>
+                    {t.worker_id && <span>المسؤول: {getName(workers, t.worker_id)}</span>}
+                    {t.due_date && <span>التسليم: {t.due_date}</span>}
+                    {t.estimated_hours > 0 && <span>{formatHours(t.actual_hours)} / {formatHours(t.estimated_hours)}</span>}
+                  </div>
                 </div>
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span>المشروع: {getName(projects, t.project_id)}</span>
-                  {t.worker_id && <span>المسؤول: {getName(workers, t.worker_id)}</span>}
-                  {t.due_date && <span>التسليم: {t.due_date}</span>}
-                  {t.estimated_hours > 0 && <span>{t.actual_hours || 0}/{t.estimated_hours} ساعة</span>}
+                <div className="flex items-center gap-1">
+                  <Button variant="ghost" size="icon" onClick={() => setExpandedId(expandedId === t.id ? null : t.id)}>
+                    <MessageSquare className="w-4 h-4" />
+                    {expandedId === t.id ? <ChevronUp className="w-3 h-3 -mr-1" /> : <ChevronDown className="w-3 h-3 -mr-1" />}
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => handleEdit(t)}><Pencil className="w-4 h-4" /></Button>
+                  <Button variant="ghost" size="icon" className="text-red-500" onClick={() => handleDelete(t.id)}><Trash2 className="w-4 h-4" /></Button>
                 </div>
               </div>
-              <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon" onClick={() => setCommentsTask(t)}><MessageSquare className="w-4 h-4" /></Button>
-                <Button variant="ghost" size="icon" onClick={() => handleEdit(t)}><Pencil className="w-4 h-4" /></Button>
-                <Button variant="ghost" size="icon" className="text-red-500" onClick={() => handleDelete(t.id)}><Trash2 className="w-4 h-4" /></Button>
-              </div>
+              {expandedId === t.id && <TaskCommentsThread task={t} />}
             </div>
           ))}
         </div>
@@ -186,15 +224,26 @@ export default function Tasks() {
               </Select>
             </div>
           </div>
+          <div><Label>تاريخ التسليم</Label><Input type="date" value={form.due_date} onChange={(e) => setForm({ ...form, due_date: e.target.value })} /></div>
           <div className="grid grid-cols-2 gap-4">
-            <div><Label>تاريخ التسليم</Label><Input type="date" value={form.due_date} onChange={(e) => setForm({ ...form, due_date: e.target.value })} /></div>
-            <div><Label>الساعات المقدرة</Label><Input type="number" value={form.estimated_hours} onChange={(e) => setForm({ ...form, estimated_hours: e.target.value })} /></div>
+            <HoursMinutesInput
+              label="الساعات المقدرة"
+              hours={form.estimated_h}
+              minutes={form.estimated_m}
+              onHoursChange={(v) => setForm({ ...form, estimated_h: v })}
+              onMinutesChange={(v) => setForm({ ...form, estimated_m: v })}
+            />
+            <HoursMinutesInput
+              label="الساعات الفعلية"
+              hours={form.actual_h}
+              minutes={form.actual_m}
+              onHoursChange={(v) => setForm({ ...form, actual_h: v })}
+              onMinutesChange={(v) => setForm({ ...form, actual_m: v })}
+            />
           </div>
           <Button onClick={handleSave} className="w-full">{editId ? "تحديث" : "إضافة"}</Button>
         </div>
       </FormDialog>
-
-      <TaskCommentsDialog open={!!commentsTask} onOpenChange={(v) => !v && setCommentsTask(null)} task={commentsTask} />
     </div>
   );
 }
