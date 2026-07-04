@@ -228,11 +228,16 @@ export default function Tasks() {
           <div>
             <Label>عنوان المهمة *</Label>
             <div className="flex gap-2">
-              <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+              <Input
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                onBlur={() => { if (!editId && form.title && !form.description) handleGenerateWithAI(); }}
+              />
               <Button type="button" variant="outline" className="gap-1.5 shrink-0" onClick={handleGenerateWithAI} disabled={generating}>
                 <Sparkles className="w-3.5 h-3.5" /> {generating ? "جارٍ التوليد..." : "توليد بالذكاء الاصطناعي"}
               </Button>
             </div>
+            {generating && <p className="text-xs text-muted-foreground mt-1">جارٍ اقتراح تفاصيل المهمة بالذكاء الاصطناعي...</p>}
           </div>
           <div><Label>الوصف</Label><Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
           <div>

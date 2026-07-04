@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { ArrowRight, Building2 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import CompanyOverviewTab from "@/components/company-detail/CompanyOverviewTab";
 import CompanyWorkersTab from "@/components/company-detail/CompanyWorkersTab";
 import CompanyProjectsTab from "@/components/company-detail/CompanyProjectsTab";
 import CompanyTasksTab from "@/components/company-detail/CompanyTasksTab";
@@ -42,14 +43,16 @@ export default function CompanyDetail() {
         </div>
       </div>
 
-      <Tabs defaultValue="workers">
+      <Tabs defaultValue="overview">
         <TabsList>
+          <TabsTrigger value="overview">نظرة عامة</TabsTrigger>
           <TabsTrigger value="workers">العاملون</TabsTrigger>
           <TabsTrigger value="projects">المشاريع</TabsTrigger>
           <TabsTrigger value="tasks">المهام</TabsTrigger>
           <TabsTrigger value="kanban">لوحة كانبان</TabsTrigger>
           <TabsTrigger value="reports">تقارير الأداء</TabsTrigger>
         </TabsList>
+        <TabsContent value="overview"><CompanyOverviewTab companyId={id} /></TabsContent>
         <TabsContent value="workers"><CompanyWorkersTab companyId={id} /></TabsContent>
         <TabsContent value="projects"><CompanyProjectsTab companyId={id} /></TabsContent>
         <TabsContent value="tasks"><CompanyTasksTab companyId={id} /></TabsContent>
