@@ -19,6 +19,7 @@ import Workers from '@/pages/Workers';
 import Projects from '@/pages/Projects';
 import Tasks from '@/pages/Tasks';
 import Reports from '@/pages/Reports';
+import ClientPortal from '@/pages/ClientPortal';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -56,6 +57,7 @@ const AuthenticatedApp = () => {
           <Route path="/reports" element={<Reports />} />
         </Route>
       </Route>
+      <Route path="/client-portal" element={<ClientPortal />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
