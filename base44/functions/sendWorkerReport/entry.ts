@@ -72,13 +72,22 @@ Deno.serve(async (req) => {
         <table style="width:100%;border-collapse:collapse;border:1px solid #eee;">${rowsHtml}</table>
       </div>`;
 
-    for (const email of emails) {
-      await base44.integrations.Core.SendEmail({
-        to: email,
+    const resendRes = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${Deno.env.get('RESEND_API_KEY')}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: `فلك للموارد البشرية <${Deno.env.get('RESEND_FROM_EMAIL')}>`,
+        to: emails,
         subject: `تقرير أداء الموظف: ${worker.full_name}`,
-        body,
-        from_name: 'فلك للموارد البشرية',
-      });
+        html: body,
+      }),
+    });
+    if (!resendRes.ok) {
+      const errText = await resendRes.text();
+      return Response.json({ error: `Resend error: ${errText}` }, { status: 500 });
     }
 
     return Response.json({ success: true, sentTo: emails });

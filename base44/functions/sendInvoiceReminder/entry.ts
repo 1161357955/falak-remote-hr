@@ -41,12 +41,23 @@ Deno.serve(async (req) => {
       </div>
     `;
 
-    await base44.asServiceRole.integrations.Core.SendEmail({
-      to: company.email,
-      subject: `فاتورة اشتراك فلك - ${invoice.invoice_number}`,
-      body,
-      from_name: "فلك للموارد البشرية",
+    const resendRes = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${Deno.env.get('RESEND_API_KEY')}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: `فلك للموارد البشرية <${Deno.env.get('RESEND_FROM_EMAIL')}>`,
+        to: [company.email],
+        subject: `فاتورة اشتراك فلك - ${invoice.invoice_number}`,
+        html: body,
+      }),
     });
+    if (!resendRes.ok) {
+      const errText = await resendRes.text();
+      return Response.json({ error: `Resend error: ${errText}` }, { status: 500 });
+    }
 
     await base44.asServiceRole.entities.Invoice.update(invoiceId, { reminder_sent: true });
 
