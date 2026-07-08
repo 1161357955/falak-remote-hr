@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Building2, Users, FolderKanban,
@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
-const navItems = [
+const adminNavItems = [
   { label: "لوحة التحكم", icon: LayoutDashboard, path: "/" },
   { label: "المنشآت", icon: Building2, path: "/companies" },
   { label: "العاملون عن بُعد", icon: Users, path: "/workers" },
@@ -18,8 +18,25 @@ const navItems = [
   { label: "الفواتير", icon: Receipt, path: "/invoices" },
 ];
 
+const restrictedNavItems = [
+  { label: "لوحة التحكم", icon: LayoutDashboard, path: "/" },
+];
+
 export default function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile }) {
   const location = useLocation();
+  const [navItems, setNavItems] = useState(restrictedNavItems);
+
+  useEffect(() => {
+    const loadRole = async () => {
+      try {
+        const user = await base44.auth.me();
+        setNavItems(user?.role === "admin" ? adminNavItems : restrictedNavItems);
+      } catch (e) {
+        setNavItems(restrictedNavItems);
+      }
+    };
+    loadRole();
+  }, []);
 
   const handleLogout = async () => {
     await base44.auth.logout("/login");
