@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { ClipboardList, FolderKanban, CheckCircle2, Clock } from "lucide-react";
+import { ClipboardList, FolderKanban, CheckCircle2, Clock, Search } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const STATUS_OPTIONS = ["جديدة", "قيد التنفيذ", "مكتملة", "ملغاة"];
 
 const STATUS_COLORS = {
   "جديدة": "bg-blue-100 text-blue-700",
@@ -17,6 +21,7 @@ export default function WorkerDashboard() {
   const [tasks, setTasks] = useState([]);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     loadData();
@@ -66,6 +71,16 @@ export default function WorkerDashboard() {
   const completedCount = tasks.filter((t) => t.status === "مكتملة").length;
   const inProgressCount = tasks.filter((t) => t.status === "قيد التنفيذ").length;
 
+  const handleStatusChange = async (taskId, newStatus) => {
+    await base44.entities.Task.update(taskId, { status: newStatus });
+    setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t)));
+  };
+
+  const filteredTasks = tasks.filter((t) =>
+    t.title?.toLowerCase().includes(search.toLowerCase()) ||
+    t.description?.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <div>
       <PageHeader title={`مرحباً، ${worker.full_name}`} description="نظرة عامة على مهامك ومشاريعك" />
@@ -96,23 +111,41 @@ export default function WorkerDashboard() {
       </div>
 
       <div className="bg-card rounded-2xl border p-6">
-        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-          <ClipboardList className="w-5 h-5 text-primary" />
-          مهامي
-        </h3>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <h3 className="text-lg font-bold flex items-center gap-2">
+            <ClipboardList className="w-5 h-5 text-primary" />
+            مهامي
+          </h3>
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="ابحث عن مهمة..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pr-9"
+            />
+          </div>
+        </div>
         {tasks.length === 0 ? (
           <EmptyState title="لا توجد مهام" description="لم يتم إسناد أي مهمة لك بعد" icon={ClipboardList} />
+        ) : filteredTasks.length === 0 ? (
+          <EmptyState title="لا نتائج" description="لا توجد مهام مطابقة لبحثك" icon={Search} />
         ) : (
           <div className="space-y-3">
-            {tasks.map((task) => (
-              <div key={task.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/50">
+            {filteredTasks.map((task) => (
+              <div key={task.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/50 gap-3">
                 <div>
                   <p className="text-sm font-medium">{task.title}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{task.due_date || "بدون تاريخ"}</p>
                 </div>
-                <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${STATUS_COLORS[task.status] || "bg-gray-100 text-gray-700"}`}>
-                  {task.status}
-                </span>
+                <Select value={task.status} onValueChange={(val) => handleStatusChange(task.id, val)}>
+                  <SelectTrigger className={`w-40 h-8 text-xs border-0 font-medium ${STATUS_COLORS[task.status] || "bg-gray-100 text-gray-700"}`}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
             ))}
           </div>
