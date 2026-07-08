@@ -2,7 +2,7 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Building2, Users, FolderKanban,
-  ClipboardList, BarChart3, LogOut, Star, Columns3, X, ChevronsRight, ChevronsLeft, Wallet
+  ClipboardList, BarChart3, LogOut, Star, Columns3, X, ChevronsRight, ChevronsLeft, Wallet, Receipt
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
@@ -15,6 +15,7 @@ const navItems = [
   { label: "لوحة كانبان", icon: Columns3, path: "/tasks-kanban" },
   { label: "تقارير الأداء", icon: BarChart3, path: "/reports" },
   { label: "التدفقات النقدية", icon: Wallet, path: "/cash-flow" },
+  { label: "الفواتير", icon: Receipt, path: "/invoices" },
 ];
 
 export default function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile }) {
