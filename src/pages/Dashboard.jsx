@@ -28,6 +28,11 @@ export default function Dashboard() {
       const companies = await base44.entities.Company.filter({ email: user.email });
       if (companies.length === 1) {
         navigate(`/company/${companies[0].id}`, { replace: true });
+        return;
+      }
+      const workers = await base44.entities.RemoteWorker.filter({ email: user.email });
+      if (workers.length === 1) {
+        navigate(`/worker-dashboard`, { replace: true });
       }
     } catch (e) {
       // ignore, fall back to admin dashboard
