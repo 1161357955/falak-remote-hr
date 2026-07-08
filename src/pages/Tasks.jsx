@@ -48,6 +48,7 @@ export default function Tasks() {
   const [editId, setEditId] = useState(null);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("الكل");
+  const [filterProject, setFilterProject] = useState("الكل");
   const [expandedId, setExpandedId] = useState(null);
   const [generating, setGenerating] = useState(false);
   const [sortBy, setSortBy] = useState("due_date");
@@ -149,7 +150,8 @@ export default function Tasks() {
     .filter((t) => {
       const matchSearch = t.title?.includes(search);
       const matchStatus = filterStatus === "الكل" || t.status === filterStatus;
-      return matchSearch && matchStatus;
+      const matchProject = filterProject === "الكل" || t.project_id === filterProject;
+      return matchSearch && matchStatus && matchProject;
     })
     .sort((a, b) => {
       if (sortBy === "due_date") {
@@ -202,6 +204,13 @@ export default function Tasks() {
           <SelectContent>
             <SelectItem value="الكل">الكل</SelectItem>
             {["جديدة", "قيد التنفيذ", "مكتملة", "ملغاة"].map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={filterProject} onValueChange={setFilterProject}>
+          <SelectTrigger className="w-48"><SelectValue placeholder="المشروع" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="الكل">كل المشاريع</SelectItem>
+            {projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={sortBy} onValueChange={setSortBy}>
