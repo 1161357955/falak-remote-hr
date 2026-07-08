@@ -50,6 +50,7 @@ export default function Tasks() {
   const [filterStatus, setFilterStatus] = useState("الكل");
   const [expandedId, setExpandedId] = useState(null);
   const [generating, setGenerating] = useState(false);
+  const [sortBy, setSortBy] = useState("due_date");
   const { toast } = useToast();
 
   useEffect(() => { loadData(); }, []);
@@ -142,11 +143,28 @@ export default function Tasks() {
     }
   };
 
-  const filtered = tasks.filter((t) => {
-    const matchSearch = t.title?.includes(search);
-    const matchStatus = filterStatus === "الكل" || t.status === filterStatus;
-    return matchSearch && matchStatus;
-  });
+  const priorityOrder = { "عاجلة": 0, "عالية": 1, "متوسطة": 2, "منخفضة": 3 };
+
+  const filtered = tasks
+    .filter((t) => {
+      const matchSearch = t.title?.includes(search);
+      const matchStatus = filterStatus === "الكل" || t.status === filterStatus;
+      return matchSearch && matchStatus;
+    })
+    .sort((a, b) => {
+      if (sortBy === "due_date") {
+        if (!a.due_date) return 1;
+        if (!b.due_date) return -1;
+        return new Date(a.due_date) - new Date(b.due_date);
+      }
+      if (sortBy === "priority") {
+        return (priorityOrder[a.priority] ?? 9) - (priorityOrder[b.priority] ?? 9);
+      }
+      if (sortBy === "created_date") {
+        return new Date(b.created_date) - new Date(a.created_date);
+      }
+      return 0;
+    });
 
   const statusColor = {
     "جديدة": "bg-blue-100 text-blue-700",
@@ -184,6 +202,14 @@ export default function Tasks() {
           <SelectContent>
             <SelectItem value="الكل">الكل</SelectItem>
             {["جديدة", "قيد التنفيذ", "مكتملة", "ملغاة"].map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="due_date">تاريخ التسليم</SelectItem>
+            <SelectItem value="priority">الأولوية</SelectItem>
+            <SelectItem value="created_date">تاريخ الإنشاء</SelectItem>
           </SelectContent>
         </Select>
       </div>
