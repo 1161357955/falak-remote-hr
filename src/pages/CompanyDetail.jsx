@@ -14,10 +14,24 @@ export default function CompanyDetail() {
   const { id } = useParams();
   const [company, setCompany] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [allowed, setAllowed] = useState(false);
 
   useEffect(() => {
-    base44.entities.Company.get(id).then(setCompany).finally(() => setLoading(false));
+    loadData();
   }, [id]);
+
+  const loadData = async () => {
+    try {
+      const [user, comp] = await Promise.all([
+        base44.auth.me(),
+        base44.entities.Company.get(id),
+      ]);
+      setCompany(comp);
+      setAllowed(user?.role === "admin" || (comp?.email && user?.email === comp.email));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-muted border-t-primary rounded-full animate-spin" /></div>;
@@ -25,6 +39,10 @@ export default function CompanyDetail() {
 
   if (!company) {
     return <div className="p-8 text-center text-muted-foreground">المنشأة غير موجودة</div>;
+  }
+
+  if (!allowed) {
+    return <div className="p-8 text-center text-muted-foreground">غير مصرح لك بالوصول إلى بيانات هذه المنشأة</div>;
   }
 
   return (

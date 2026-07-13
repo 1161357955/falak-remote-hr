@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import AdminRoute from '@/components/AdminRoute';
 
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
@@ -56,16 +57,18 @@ const AuthenticatedApp = () => {
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route element={<AppLayout />}>
           <Route path="/" element={<Dashboard />} />
-          <Route path="/companies" element={<Companies />} />
           <Route path="/company/:id" element={<CompanyDetail />} />
           <Route path="/worker-dashboard" element={<WorkerDashboard />} />
-          <Route path="/workers" element={<Workers />} />
-          <Route path="/projects" element={<Projects />} />
-          <Route path="/tasks" element={<Tasks />} />
-          <Route path="/tasks-kanban" element={<TasksKanban />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/cash-flow" element={<CashFlow />} />
-          <Route path="/invoices" element={<Invoices />} />
+          <Route element={<AdminRoute />}>
+            <Route path="/companies" element={<Companies />} />
+            <Route path="/workers" element={<Workers />} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/tasks" element={<Tasks />} />
+            <Route path="/tasks-kanban" element={<TasksKanban />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/cash-flow" element={<CashFlow />} />
+            <Route path="/invoices" element={<Invoices />} />
+          </Route>
         </Route>
       </Route>
       <Route path="/client-portal" element={<ClientPortal />} />
