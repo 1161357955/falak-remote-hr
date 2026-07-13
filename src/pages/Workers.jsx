@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Users, Plus, Pencil, Trash2, Search, Accessibility } from "lucide-react";
+import { Users, Plus, Pencil, Trash2, Search, Accessibility, Phone, Video, MessageSquare, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,22 +26,48 @@ export default function Workers() {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState(null);
   const [search, setSearch] = useState("");
+  const [meetings, setMeetings] = useState([]);
+  const [comments, setComments] = useState([]);
+  const [tasks, setTasks] = useState([]);
   const { toast } = useToast();
 
   useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
     try {
-      const [w, c] = await Promise.all([
+      const [w, c, m, cm, t] = await Promise.all([
         base44.entities.RemoteWorker.list("-created_date"),
         base44.entities.Company.list(),
+        base44.entities.Meeting.list(),
+        base44.entities.TaskComment.list(),
+        base44.entities.Task.list(),
       ]);
       setWorkers(w);
       setCompanies(c);
+      setMeetings(m);
+      setComments(cm);
+      setTasks(t);
     } finally { setLoading(false); }
   };
 
   const getCompanyName = (id) => companies.find((c) => c.id === id)?.name || "—";
+
+  const getPresence = (w) => {
+    if (!w.last_active_at) return { color: "bg-red-500", label: "غير متصل" };
+    const diffMin = (Date.now() - new Date(w.last_active_at).getTime()) / 60000;
+    if (diffMin <= 3) return { color: "bg-green-500", label: "نشط" };
+    if (diffMin <= 15) return { color: "bg-green-500", label: "في وضع السكون" };
+    return { color: "bg-red-500", label: "غير متصل" };
+  };
+
+  const getMetrics = (w) => {
+    const isParticipant = (m) => m.organizer_email === w.email || (m.participant_emails || []).includes(w.email);
+    const calls = meetings.filter((m) => m.meeting_type === "فردي" && isParticipant(m)).length;
+    const groupMeetings = meetings.filter((m) => m.meeting_type === "جماعي" && isParticipant(m)).length;
+    const messages = comments.filter((c) => c.author_email === w.email).length;
+    const hours = tasks.filter((t) => t.worker_id === w.id).reduce((sum, t) => sum + (t.actual_hours || 0), 0);
+    return { calls, groupMeetings, messages, hours };
+  };
 
   const handleSave = async () => {
     if (!form.full_name || !form.national_id || !form.company_id) {
@@ -115,6 +141,8 @@ export default function Workers() {
                   <th className="text-right p-4 font-medium">المسمى</th>
                   <th className="text-right p-4 font-medium">نوع الدوام</th>
                   <th className="text-right p-4 font-medium">الحالة</th>
+                  <th className="text-right p-4 font-medium">الاتصال</th>
+                  <th className="text-right p-4 font-medium">المؤشرات</th>
                   <th className="text-right p-4 font-medium">إجراءات</th>
                 </tr>
               </thead>
@@ -133,6 +161,30 @@ export default function Workers() {
                     <td className="p-4">{w.work_type}</td>
                     <td className="p-4">
                       <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColor[w.status] || ""}`}>{w.status}</span>
+                    </td>
+                    <td className="p-4">
+                      {(() => {
+                        const presence = getPresence(w);
+                        return (
+                          <div className="flex items-center gap-1.5">
+                            <span className={`w-2.5 h-2.5 rounded-full ${presence.color}`} />
+                            <span className="text-xs text-muted-foreground">{presence.label}</span>
+                          </div>
+                        );
+                      })()}
+                    </td>
+                    <td className="p-4">
+                      {(() => {
+                        const metrics = getMetrics(w);
+                        return (
+                          <div className="flex items-center gap-2 flex-wrap text-[11px] text-muted-foreground">
+                            <span className="flex items-center gap-1"><Phone className="w-3 h-3" /> {metrics.calls}</span>
+                            <span className="flex items-center gap-1"><Video className="w-3 h-3" /> {metrics.groupMeetings}</span>
+                            <span className="flex items-center gap-1"><MessageSquare className="w-3 h-3" /> {metrics.messages}</span>
+                            <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {metrics.hours.toFixed(1)}س</span>
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-1">

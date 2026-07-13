@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import { Menu, Star } from "lucide-react";
 import Sidebar from "./Sidebar";
 import NotificationBell from "./NotificationBell";
+import PresenceHeartbeat from "./PresenceHeartbeat";
 
 export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
@@ -10,6 +11,7 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen bg-background">
+      <PresenceHeartbeat />
       <Sidebar
         collapsed={collapsed}
         onToggleCollapse={() => setCollapsed((c) => !c)}
