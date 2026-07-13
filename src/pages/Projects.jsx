@@ -35,6 +35,67 @@ const GOVERNANCE_TASKS = [
   "التوسع في العمل",
 ];
 
+const SAAS_TASKS = [
+  "تحديد نطاق المنتج الأدنى (MVP)",
+  "هندسة المتطلبات (Requirements Engineering)",
+  "تصميم معمارية البيانات (Database Schema Design)",
+  "رسم المخططات الهيكلية (Wireframes)",
+  "تصميم واجهات المستخدم (UI Design)",
+  "النمذجة التفاعلية (Prototyping)",
+  "اختيار التقنيات (Tech Stack)",
+  "إعداد بنية تعدد المستأجرين (Multi-Tenancy Architecture)",
+  "نظام الهوية والأمان (IAM & Auth)",
+  "إدارة الهيكل التنظيمي والوظائف والملفات الشخصية للموظفين (HRM)",
+  "نظام الحضور والانصراف، الإجازات، والورديات (HRM)",
+  "مسير الرواتب (Payroll) وحساب المستحقات والخصومات والضرائب (HRM)",
+  "إدارة العملاء المحتملين (Leads) والعملاء الحاليين (Contacts) (CRM)",
+  "قمع المبيعات (Sales Pipeline) وتتبع الصفقات والمراحل (CRM)",
+  "نظام التذاكر والدعم الفني لخدمة العملاء (CRM)",
+  "المالية والمحاسبة: شجرة الحسابات والقيود والفواتير (ERP)",
+  "المخزون والمشتريات: إدارة المستودعات والموردين (ERP)",
+  "التقارير ولوحات البيانات (ERP)",
+  "بوابة الدفع واشتراكات النظام (Billing & Subscriptions)",
+  "نظام الإشعارات (داخلي، بريد، SMS/WhatsApp)",
+  "الربط البرمجي (Webhooks & APIs)",
+  "الاختبارات البرمجية التلقائية (Unit & Integration Testing)",
+  "اختبار الأمان وضمان العزل (Security & Isolation Testing)",
+  "اختبار الضغط (Load Testing)",
+  "إعداد البيئات (Development, Staging, Production)",
+  "أتمتة الإطلاق (CI/CD Pipelines)",
+  "النسخ الاحتياطي والأمان (Backups & WAF)",
+  "أدوات المراقبة (Monitoring)",
+  "نظام تلقي الملاحظات (Bug Tracking)",
+  "التحديثات المستمرة",
+];
+
+const DIGITAL_PROJECT_TASKS = [
+  "تحديد نطاق المشروع (Scope)",
+  "تحديد المتطلبات التقنية (Technical Specs)",
+  "دراسة الالتزام والقوانين (Compliance)",
+  "وضع الميزانية (Budgeting)",
+  "شراء وتجهيز الأنظمة السحابية",
+  "إعداد أدوات التواصل الداخلي والإدارة",
+  "برمجة وتجهيز شجرة الرد الآلي (IVR Tree)",
+  "الأمن السيبراني (2FA وVPN)",
+  "صياغة الوصف الوظيفي",
+  "التوظيف وإعداد العقود",
+  "تجهيز بيئة العمل للموظف",
+  "برنامج التدريب المكثف على الأنظمة",
+  "التدريب على سيناريوهات التعامل مع المشاكل (Playbooks)",
+  "اختبار الضغط والاتصال (Stress Testing)",
+  "محاكاة العمليات (Simulation)",
+  "تعديل الأخطاء (Debugging)",
+  "الإطلاق الكامل (Official Launch)",
+  "مراقبة مؤشرات الأداء الرئيسية (KPIs)",
+  "الدعم التقني المستمر (Maintenance)",
+];
+
+const CATEGORY_TASKS = {
+  "برنامج الإدارة الرشيدة": GOVERNANCE_TASKS,
+  "أنظمة البرمجيات كخدمة": SAAS_TASKS,
+  "المشاريع الرقمية": DIGITAL_PROJECT_TASKS,
+};
+
 export default function Projects() {
   const [projects, setProjects] = useState([]);
   const [companies, setCompanies] = useState([]);
@@ -71,9 +132,10 @@ export default function Projects() {
       await base44.entities.Project.update(editId, data);
     } else {
       const newProject = await base44.entities.Project.create(data);
-      if (data.category === "برنامج الإدارة الرشيدة") {
+      const taskList = CATEGORY_TASKS[data.category];
+      if (taskList) {
         await base44.entities.Task.bulkCreate(
-          GOVERNANCE_TASKS.map((title) => ({ title, project_id: newProject.id, status: "جديدة" }))
+          taskList.map((title) => ({ title, project_id: newProject.id, status: "جديدة" }))
         );
       }
     }
@@ -81,7 +143,8 @@ export default function Projects() {
     setForm(emptyForm);
     setEditId(null);
     loadData();
-    toast({ title: editId ? "تم التحديث" : "تمت الإضافة", description: !editId && data.category === "برنامج الإدارة الرشيدة" ? "تم إنشاء قائمة مهام برنامج الإدارة الرشيدة، يمكنك الآن إسنادها للموظفين" : undefined });
+    const createdTaskList = !editId && CATEGORY_TASKS[data.category];
+    toast({ title: editId ? "تم التحديث" : "تمت الإضافة", description: createdTaskList ? `تم إنشاء ${createdTaskList.length} مهمة تلقائياً حسب قائمة "${data.category}"، يمكنك الآن إسنادها للموظفين` : undefined });
   };
 
   const handleEdit = (p) => {
