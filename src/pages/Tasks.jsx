@@ -54,6 +54,7 @@ export default function Tasks() {
   const [filterCompany] = useState(() => new URLSearchParams(window.location.search).get("company") || null);
   const [expandedId, setExpandedId] = useState(null);
   const [generating, setGenerating] = useState(false);
+  const [generatingDefaults, setGeneratingDefaults] = useState(false);
   const [sortBy, setSortBy] = useState("due_date");
   const { toast } = useToast();
 
@@ -144,6 +145,31 @@ export default function Tasks() {
       toast({ title: "تم توليد تفاصيل المهمة بالذكاء الاصطناعي" });
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleGenerateDefaultTasks = async () => {
+    const project = projects.find((p) => p.id === form.project_id);
+    const list = CATEGORY_TASKS[project?.category];
+    if (!list) return;
+    setGeneratingDefaults(true);
+    try {
+      const existingTitles = tasks.filter((t) => t.project_id === project.id).map((t) => t.title);
+      const toCreate = list
+        .filter((title) => !existingTitles.includes(title))
+        .map((title) => ({ title, project_id: project.id, status: "جديدة", priority: "متوسطة" }));
+      if (toCreate.length === 0) {
+        toast({ title: "جميع المهام الافتراضية موجودة بالفعل لهذا المشروع" });
+        return;
+      }
+      await base44.entities.Task.bulkCreate(toCreate);
+      setDialogOpen(false);
+      setForm(emptyForm);
+      setEditId(null);
+      await loadData();
+      toast({ title: `تم توليد ${toCreate.length} مهمة تلقائياً` });
+    } finally {
+      setGeneratingDefaults(false);
     }
   };
 
@@ -295,6 +321,17 @@ export default function Tasks() {
               <SelectTrigger><SelectValue placeholder="اختر المشروع" /></SelectTrigger>
               <SelectContent>{projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>)}</SelectContent>
             </Select>
+            {CATEGORY_TASKS[projects.find((p) => p.id === form.project_id)?.category] && (
+              <Button
+                type="button" variant="outline" size="sm"
+                className="w-full mt-2 gap-1.5"
+                onClick={handleGenerateDefaultTasks}
+                disabled={generatingDefaults}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                {generatingDefaults ? "جارٍ التوليد..." : `توليد كل مهام "${projects.find((p) => p.id === form.project_id)?.category}" تلقائياً`}
+              </Button>
+            )}
           </div>
           <div>
             <Label>الموظف المسؤول</Label>

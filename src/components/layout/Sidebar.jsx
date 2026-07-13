@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Building2, Users, FolderKanban,
-  ClipboardList, BarChart3, LogOut, Star, Columns3, X, ChevronsRight, ChevronsLeft, Wallet, Receipt
+  ClipboardList, BarChart3, LogOut, Star, Columns3, X, ChevronsRight, ChevronsLeft, Wallet, Receipt, CalendarDays
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
@@ -12,6 +12,7 @@ const adminNavItems = [
   { label: "العاملون عن بُعد", icon: Users, path: "/workers" },
   { label: "المشاريع", icon: FolderKanban, path: "/projects" },
   { label: "المهام", icon: ClipboardList, path: "/tasks" },
+  { label: "تقويم المهام", icon: CalendarDays, path: "/tasks-calendar" },
   { label: "لوحة كانبان", icon: Columns3, path: "/tasks-kanban" },
   { label: "تقارير الأداء", icon: BarChart3, path: "/reports" },
   { label: "التدفقات النقدية", icon: Wallet, path: "/cash-flow" },
