@@ -17,6 +17,7 @@ const adminNavItems = [
   { label: "الاجتماعات", icon: Video, path: "/meetings" },
   { label: "الاتصالات الداخلية", icon: MessageSquare, path: "/messages" },
   { label: "تقارير الأداء", icon: BarChart3, path: "/reports" },
+  { label: "كشوف الرواتب", icon: Wallet, path: "/payroll" },
   { label: "التدفقات النقدية", icon: Wallet, path: "/cash-flow" },
   { label: "الفواتير", icon: Receipt, path: "/invoices" },
 ];

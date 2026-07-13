@@ -23,6 +23,7 @@ import TasksCalendar from '@/pages/TasksCalendar';
 import TasksKanban from '@/pages/TasksKanban';
 import Reports from '@/pages/Reports';
 import CashFlow from '@/pages/CashFlow';
+import Payroll from '@/pages/Payroll';
 import Invoices from '@/pages/Invoices';
 import ClientPortal from '@/pages/ClientPortal';
 import WorkerReport from '@/pages/WorkerReport';
@@ -72,6 +73,7 @@ const AuthenticatedApp = () => {
             <Route path="/tasks-calendar" element={<TasksCalendar />} />
             <Route path="/tasks-kanban" element={<TasksKanban />} />
             <Route path="/reports" element={<Reports />} />
+            <Route path="/payroll" element={<Payroll />} />
             <Route path="/cash-flow" element={<CashFlow />} />
             <Route path="/invoices" element={<Invoices />} />
           </Route>
