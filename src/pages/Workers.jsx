@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Users, Plus, Pencil, Trash2, Search, Accessibility, Phone, Video, MessageSquare, Clock } from "lucide-react";
+import { Users, Plus, Pencil, Trash2, Search, Accessibility, Phone, Video, MessageSquare, Clock, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,9 @@ import PageHeader from "@/components/shared/PageHeader";
 import EmptyState from "@/components/shared/EmptyState";
 import FormDialog from "@/components/shared/FormDialog";
 import { useToast } from "@/components/ui/use-toast";
+
+const WEEKLY_HOURS_TARGET = 48;
+const MONTHLY_HOURS = (WEEKLY_HOURS_TARGET * 52) / 12; // ~208 ساعة شهرياً وفق معيار 48 ساعة أسبوعياً
 
 const emptyForm = {
   full_name: "", national_id: "", gender: "ذكر", is_disabled: false,
@@ -66,7 +69,10 @@ export default function Workers() {
     const groupMeetings = meetings.filter((m) => m.meeting_type === "جماعي" && isParticipant(m)).length;
     const messages = comments.filter((c) => c.author_email === w.email).length;
     const hours = tasks.filter((t) => t.worker_id === w.id).reduce((sum, t) => sum + (t.actual_hours || 0), 0);
-    return { calls, groupMeetings, messages, hours };
+    const hourlyRate = w.salary ? w.salary / MONTHLY_HOURS : 0;
+    const earnedWage = hours * hourlyRate;
+    const weeklyCompliance = Math.min(100, Math.round((hours / WEEKLY_HOURS_TARGET) * 100));
+    return { calls, groupMeetings, messages, hours, hourlyRate, earnedWage, weeklyCompliance };
   };
 
   const handleSave = async () => {
@@ -177,11 +183,18 @@ export default function Workers() {
                       {(() => {
                         const metrics = getMetrics(w);
                         return (
-                          <div className="flex items-center gap-2 flex-wrap text-[11px] text-muted-foreground">
-                            <span className="flex items-center gap-1"><Phone className="w-3 h-3" /> {metrics.calls}</span>
-                            <span className="flex items-center gap-1"><Video className="w-3 h-3" /> {metrics.groupMeetings}</span>
-                            <span className="flex items-center gap-1"><MessageSquare className="w-3 h-3" /> {metrics.messages}</span>
-                            <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {metrics.hours.toFixed(1)}س</span>
+                          <div className="text-[11px] text-muted-foreground space-y-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="flex items-center gap-1"><Phone className="w-3 h-3" /> {metrics.calls}</span>
+                              <span className="flex items-center gap-1"><Video className="w-3 h-3" /> {metrics.groupMeetings}</span>
+                              <span className="flex items-center gap-1"><MessageSquare className="w-3 h-3" /> {metrics.messages}</span>
+                              <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {metrics.hours.toFixed(1)} من {WEEKLY_HOURS_TARGET}س ({metrics.weeklyCompliance}%)</span>
+                            </div>
+                            {w.salary > 0 && (
+                              <div className="flex items-center gap-1">
+                                <Wallet className="w-3 h-3" /> {metrics.hourlyRate.toFixed(1)} ر.س/ساعة — مستحق: {metrics.earnedWage.toFixed(0)} ر.س
+                              </div>
+                            )}
                           </div>
                         );
                       })()}
