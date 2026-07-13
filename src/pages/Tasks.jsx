@@ -14,6 +14,7 @@ import HoursMinutesInput from "@/components/tasks/HoursMinutesInput";
 import TaskCommentsThread from "@/components/tasks/TaskCommentsThread";
 import { useToast } from "@/components/ui/use-toast";
 import { CATEGORY_TASKS } from "@/lib/projectTaskLists";
+import GoogleTasksSync from "@/components/tasks/GoogleTasksSync";
 
 const emptyForm = {
   title: "", description: "", project_id: "", worker_id: "",
@@ -219,9 +220,12 @@ export default function Tasks() {
   return (
     <div>
       <PageHeader title="المهام" description="توزيع ومتابعة المهام">
-        <Button onClick={() => { setForm(emptyForm); setEditId(null); setDialogOpen(true); }} className="gap-2">
-          <Plus className="w-4 h-4" /> إضافة مهمة
-        </Button>
+        <div className="flex items-center gap-2">
+          <GoogleTasksSync />
+          <Button onClick={() => { setForm(emptyForm); setEditId(null); setDialogOpen(true); }} className="gap-2">
+            <Plus className="w-4 h-4" /> إضافة مهمة
+          </Button>
+        </div>
       </PageHeader>
 
       <div className="flex flex-wrap gap-3 mb-6">
