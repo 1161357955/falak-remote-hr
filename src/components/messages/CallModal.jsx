@@ -15,6 +15,22 @@ export default function CallModal({ channelId, currentUser, peerEmail, peerName,
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
+  const connectedAtRef = useRef(null);
+  const loggedRef = useRef(false);
+
+  const logCallMessage = async (status) => {
+    if (!isCaller || loggedRef.current) return;
+    loggedRef.current = true;
+    const duration = connectedAtRef.current ? Math.round((Date.now() - connectedAtRef.current) / 1000) : 0;
+    await base44.entities.ChannelMessage.create({
+      channel_id: channelId,
+      author_name: currentUser.full_name,
+      author_email: currentUser.email,
+      message_type: "مكالمة",
+      call_status: status,
+      call_duration: duration,
+    }).catch(() => {});
+  };
 
   useEffect(() => {
     let unsubscribe;
@@ -37,6 +53,7 @@ export default function CallModal({ channelId, currentUser, peerEmail, peerName,
       pc.ontrack = (e) => {
         if (remoteVideoRef.current) remoteVideoRef.current.srcObject = e.streams[0];
         setConnected(true);
+        connectedAtRef.current = Date.now();
       };
 
       pc.onicecandidate = (e) => {
@@ -92,6 +109,7 @@ export default function CallModal({ channelId, currentUser, peerEmail, peerName,
         } else if (s.type === "ice-candidate") {
           try { await pc.addIceCandidate(new RTCIceCandidate(JSON.parse(s.payload))); } catch (e) {}
         } else if (s.type === "hangup") {
+          logCallMessage(connectedAtRef.current ? "مكتملة" : "فائتة");
           cleanup();
           onClose();
         }
@@ -103,6 +121,7 @@ export default function CallModal({ channelId, currentUser, peerEmail, peerName,
     return () => {
       unsubscribe?.();
       cleanup();
+      logCallMessage(connectedAtRef.current ? "مكتملة" : "فائتة");
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -121,6 +140,7 @@ export default function CallModal({ channelId, currentUser, peerEmail, peerName,
       to_email: peerEmail,
       type: "hangup",
     });
+    await logCallMessage(connectedAtRef.current ? "مكتملة" : "فائتة");
     cleanup();
     onClose();
   };

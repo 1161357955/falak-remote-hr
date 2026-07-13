@@ -1,11 +1,16 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Hash, MessageCircle, Send, Paperclip, X, Phone, Video, Mic, Monitor } from "lucide-react";
+import { Hash, MessageCircle, Send, Paperclip, X, Phone, Video, Mic, Monitor, PhoneMissed } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { base44 } from "@/api/base44Client";
 import VideoRecorderModal from "./VideoRecorderModal";
 import AudioRecorderModal from "./AudioRecorderModal";
 import { captureScreenshot } from "@/lib/captureScreenshot";
+
+const formatCallDuration = (seconds) => {
+  const s = seconds || 0;
+  return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+};
 
 const renderAttachment = (url) => {
   const name = url.split("/").pop() || "";
@@ -92,6 +97,20 @@ export default function ChatThread({ channel, messages, currentUser, dmLabel, on
         ) : (
           messages.map((m) => {
             const isMe = m.author_email === currentUser?.email;
+            if (m.message_type === "مكالمة") {
+              const missed = m.call_status !== "مكتملة";
+              return (
+                <div key={m.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                  <div className={`flex items-center gap-2 rounded-2xl px-3 py-2 text-xs ${missed ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}>
+                    {missed ? <PhoneMissed className="w-3.5 h-3.5" /> : <Phone className="w-3.5 h-3.5" />}
+                    <span>
+                      {isMe ? "مكالمة صادرة" : "مكالمة واردة"}
+                      {missed ? " (فائتة)" : ` — ${formatCallDuration(m.call_duration)}`}
+                    </span>
+                  </div>
+                </div>
+              );
+            }
             return (
               <div key={m.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                 <div className={`max-w-[75%] rounded-2xl px-3 py-2 ${isMe ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
