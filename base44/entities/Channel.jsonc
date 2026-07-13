@@ -1,0 +1,38 @@
+{
+  "name": "Channel",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "\u0627\u0633\u0645 \u0627\u0644\u0642\u0646\u0627\u0629"
+    },
+    "description": {
+      "type": "string",
+      "title": "\u0627\u0644\u0648\u0635\u0641"
+    },
+    "type": {
+      "type": "string",
+      "title": "\u0646\u0648\u0639 \u0627\u0644\u0645\u062d\u0627\u062f\u062b\u0629",
+      "enum": [
+        "\u0642\u0646\u0627\u0629 \u0639\u0627\u0645\u0629",
+        "\u0645\u062d\u0627\u062f\u062b\u0629 \u0645\u0628\u0627\u0634\u0631\u0629"
+      ],
+      "default": "\u0642\u0646\u0627\u0629 \u0639\u0627\u0645\u0629"
+    },
+    "participant_emails": {
+      "type": "array",
+      "title": "\u0627\u0644\u0645\u0634\u0627\u0631\u0643\u0648\u0646",
+      "items": {
+        "type": "string"
+      }
+    },
+    "created_by_email": {
+      "type": "string",
+      "title": "\u0628\u0631\u064a\u062f \u0627\u0644\u0645\u0646\u0634\u0626"
+    }
+  },
+  "required": [
+    "name",
+    "type"
+  ]
+}
