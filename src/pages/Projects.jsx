@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { FolderKanban, Plus, Pencil, Trash2, Search, Calendar } from "lucide-react";
+import { FolderKanban, Plus, Pencil, Trash2, Search, Calendar, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,6 +43,7 @@ export default function Projects() {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState(null);
   const [search, setSearch] = useState("");
+  const [filterCompany, setFilterCompany] = useState(() => new URLSearchParams(window.location.search).get("company") || "الكل");
   const { toast } = useToast();
 
   useEffect(() => { loadData(); }, []);
@@ -94,7 +96,11 @@ export default function Projects() {
     toast({ title: "تم الحذف" });
   };
 
-  const filtered = projects.filter((p) => p.title?.includes(search));
+  const filtered = projects.filter((p) => {
+    const matchSearch = p.title?.includes(search);
+    const matchCompany = filterCompany === "الكل" || p.company_id === filterCompany;
+    return matchSearch && matchCompany;
+  });
 
   const statusColor = {
     "جديد": "bg-blue-100 text-blue-700",
@@ -115,9 +121,18 @@ export default function Projects() {
         </Button>
       </PageHeader>
 
-      <div className="relative mb-6 max-w-sm">
-        <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input placeholder="بحث..." value={search} onChange={(e) => setSearch(e.target.value)} className="pr-10" />
+      <div className="flex flex-wrap gap-3 mb-6">
+        <div className="relative max-w-xs flex-1">
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input placeholder="بحث..." value={search} onChange={(e) => setSearch(e.target.value)} className="pr-10" />
+        </div>
+        <Select value={filterCompany} onValueChange={setFilterCompany}>
+          <SelectTrigger className="w-52"><SelectValue placeholder="المنشأة" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="الكل">كل المنشآت</SelectItem>
+            {companies.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+          </SelectContent>
+        </Select>
       </div>
 
       {filtered.length === 0 ? (
@@ -149,6 +164,9 @@ export default function Projects() {
                 <Progress value={p.progress || 0} className="h-2" />
               </div>
               <div className="flex items-center gap-2 border-t pt-3">
+                <Link to={`/tasks?project=${p.id}`}>
+                  <Button variant="ghost" size="sm"><ClipboardList className="w-3.5 h-3.5 ml-1" /> المهام</Button>
+                </Link>
                 <Button variant="ghost" size="sm" onClick={() => handleEdit(p)}><Pencil className="w-3.5 h-3.5 ml-1" /> تعديل</Button>
                 <Button variant="ghost" size="sm" className="text-red-500" onClick={() => handleDelete(p.id)}><Trash2 className="w-3.5 h-3.5 ml-1" /> حذف</Button>
               </div>

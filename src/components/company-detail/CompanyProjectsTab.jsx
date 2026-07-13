@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { FolderKanban, Plus, Pencil, Trash2 } from "lucide-react";
+import { FolderKanban, Plus, Pencil, Trash2, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,7 +18,7 @@ const emptyForm = {
   start_date: "", end_date: "", budget: "", progress: 0,
 };
 
-export default function CompanyProjectsTab({ companyId }) {
+export default function CompanyProjectsTab({ companyId, isAdmin }) {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -77,7 +78,14 @@ export default function CompanyProjectsTab({ companyId }) {
 
   return (
     <div>
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end gap-2 mb-4">
+        {isAdmin && (
+          <Link to={`/projects?company=${companyId}`}>
+            <Button variant="outline" className="gap-2">
+              <FolderKanban className="w-4 h-4" /> فتح في لوحة المشاريع
+            </Button>
+          </Link>
+        )}
         <Button onClick={() => { setForm(emptyForm); setEditId(null); setDialogOpen(true); }} className="gap-2">
           <Plus className="w-4 h-4" /> إضافة مشروع
         </Button>
@@ -98,6 +106,11 @@ export default function CompanyProjectsTab({ companyId }) {
                 <div className="h-full bg-primary" style={{ width: `${p.progress || 0}%` }} />
               </div>
               <div className="flex items-center gap-2 border-t pt-3">
+                {isAdmin && (
+                  <Link to={`/tasks?project=${p.id}`}>
+                    <Button variant="ghost" size="sm"><ClipboardList className="w-3.5 h-3.5 ml-1" /> المهام</Button>
+                  </Link>
+                )}
                 <Button variant="ghost" size="sm" onClick={() => handleEdit(p)}><Pencil className="w-3.5 h-3.5 ml-1" /> تعديل</Button>
                 <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700" onClick={() => handleDelete(p.id)}><Trash2 className="w-3.5 h-3.5 ml-1" /> حذف</Button>
               </div>

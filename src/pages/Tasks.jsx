@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { ClipboardList, Plus, Pencil, Trash2, Search, MessageSquare, ChevronDown, ChevronUp, Sparkles } from "lucide-react";
+import { ClipboardList, Plus, Pencil, Trash2, Search, MessageSquare, ChevronDown, ChevronUp, Sparkles, FolderKanban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,7 +49,7 @@ export default function Tasks() {
   const [editId, setEditId] = useState(null);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("الكل");
-  const [filterProject, setFilterProject] = useState("الكل");
+  const [filterProject, setFilterProject] = useState(() => new URLSearchParams(window.location.search).get("project") || "الكل");
   const [expandedId, setExpandedId] = useState(null);
   const [generating, setGenerating] = useState(false);
   const [sortBy, setSortBy] = useState("due_date");
@@ -237,7 +238,9 @@ export default function Tasks() {
                     <span className={`text-xs px-2 py-0.5 rounded-full ${statusColor[t.status] || ""}`}>{t.status}</span>
                   </div>
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <span>المشروع: {getName(projects, t.project_id)}</span>
+                    <Link to={`/projects?company=${projects.find((p) => p.id === t.project_id)?.company_id || ""}`} className="flex items-center gap-1 hover:text-primary hover:underline">
+                      <FolderKanban className="w-3 h-3" /> المشروع: {getName(projects, t.project_id)}
+                    </Link>
                     {t.worker_id && <span>المسؤول: {getName(workers, t.worker_id)}</span>}
                     {t.due_date && <span>التسليم: {t.due_date}</span>}
                     {t.estimated_hours > 0 && <span>{formatHours(t.actual_hours)} / {formatHours(t.estimated_hours)}</span>}

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { ClipboardList } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import EmptyState from "@/components/shared/EmptyState";
 
-export default function CompanyTasksTab({ companyId }) {
+export default function CompanyTasksTab({ companyId, isAdmin }) {
   const [tasks, setTasks] = useState([]);
   const [projects, setProjects] = useState([]);
   const [workers, setWorkers] = useState([]);
@@ -42,32 +44,49 @@ export default function CompanyTasksTab({ companyId }) {
   }
 
   return (
-    <div className="bg-card border rounded-2xl overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50">
-            <tr>
-              <th className="text-right p-4 font-medium">المهمة</th>
-              <th className="text-right p-4 font-medium">المشروع</th>
-              <th className="text-right p-4 font-medium">الموظف</th>
-              <th className="text-right p-4 font-medium">الأولوية</th>
-              <th className="text-right p-4 font-medium">الحالة</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {tasks.map((t) => (
-              <tr key={t.id} className="hover:bg-muted/30 transition-colors">
-                <td className="p-4 font-medium">{t.title}</td>
-                <td className="p-4 text-muted-foreground">{getName(projects, t.project_id, "title")}</td>
-                <td className="p-4 text-muted-foreground">{getName(workers, t.worker_id, "full_name")}</td>
-                <td className="p-4 text-muted-foreground">{t.priority}</td>
-                <td className="p-4">
-                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColor[t.status] || ""}`}>{t.status}</span>
-                </td>
+    <div>
+      {isAdmin && projects.length > 0 && (
+        <div className="flex justify-end mb-4">
+          <Link to={`/tasks?project=${projects[0].id}`}>
+            <Button variant="outline" className="gap-2">
+              <ClipboardList className="w-4 h-4" /> فتح في لوحة المهام
+            </Button>
+          </Link>
+        </div>
+      )}
+      <div className="bg-card border rounded-2xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50">
+              <tr>
+                <th className="text-right p-4 font-medium">المهمة</th>
+                <th className="text-right p-4 font-medium">المشروع</th>
+                <th className="text-right p-4 font-medium">الموظف</th>
+                <th className="text-right p-4 font-medium">الأولوية</th>
+                <th className="text-right p-4 font-medium">الحالة</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y">
+              {tasks.map((t) => (
+                <tr key={t.id} className="hover:bg-muted/30 transition-colors">
+                  <td className="p-4 font-medium">{t.title}</td>
+                  <td className="p-4 text-muted-foreground">
+                    {isAdmin ? (
+                      <Link to={`/tasks?project=${t.project_id}`} className="hover:text-primary hover:underline">
+                        {getName(projects, t.project_id, "title")}
+                      </Link>
+                    ) : getName(projects, t.project_id, "title")}
+                  </td>
+                  <td className="p-4 text-muted-foreground">{getName(workers, t.worker_id, "full_name")}</td>
+                  <td className="p-4 text-muted-foreground">{t.priority}</td>
+                  <td className="p-4">
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColor[t.status] || ""}`}>{t.status}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

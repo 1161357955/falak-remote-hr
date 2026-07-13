@@ -15,6 +15,7 @@ export default function CompanyDetail() {
   const [company, setCompany] = useState(null);
   const [loading, setLoading] = useState(true);
   const [allowed, setAllowed] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -27,6 +28,7 @@ export default function CompanyDetail() {
         base44.entities.Company.get(id),
       ]);
       setCompany(comp);
+      setIsAdmin(user?.role === "admin");
       setAllowed(user?.role === "admin" || (comp?.email && user?.email === comp.email));
     } finally {
       setLoading(false);
@@ -72,8 +74,8 @@ export default function CompanyDetail() {
         </TabsList>
         <TabsContent value="overview"><CompanyOverviewTab companyId={id} /></TabsContent>
         <TabsContent value="workers"><CompanyWorkersTab companyId={id} /></TabsContent>
-        <TabsContent value="projects"><CompanyProjectsTab companyId={id} /></TabsContent>
-        <TabsContent value="tasks"><CompanyTasksTab companyId={id} /></TabsContent>
+        <TabsContent value="projects"><CompanyProjectsTab companyId={id} isAdmin={isAdmin} /></TabsContent>
+        <TabsContent value="tasks"><CompanyTasksTab companyId={id} isAdmin={isAdmin} /></TabsContent>
         <TabsContent value="kanban"><CompanyKanbanTab companyId={id} /></TabsContent>
         <TabsContent value="reports"><CompanyReportsTab companyId={id} /></TabsContent>
       </Tabs>

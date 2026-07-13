@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Building2, Plus, Pencil, Trash2, Search, UploadCloud, FileText, Link2, MapPin, LayoutGrid, Users } from "lucide-react";
+import { Building2, Plus, Pencil, Trash2, Search, UploadCloud, FileText, Link2, MapPin, LayoutGrid, Users, FolderKanban } from "lucide-react";
 import { Link } from "react-router-dom";
 import "leaflet/dist/leaflet.css";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ const emptyForm = {
 export default function Companies() {
   const [companies, setCompanies] = useState([]);
   const [workerCounts, setWorkerCounts] = useState({});
+  const [projectCounts, setProjectCounts] = useState({});
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
@@ -37,9 +38,10 @@ export default function Companies() {
 
   const loadData = async () => {
     try {
-      const [data, workers] = await Promise.all([
+      const [data, workers, projects] = await Promise.all([
         base44.entities.Company.list("-created_date"),
         base44.entities.RemoteWorker.list(),
+        base44.entities.Project.list(),
       ]);
       setCompanies(data);
       const counts = {};
@@ -47,6 +49,11 @@ export default function Companies() {
         counts[w.company_id] = (counts[w.company_id] || 0) + 1;
       });
       setWorkerCounts(counts);
+      const pCounts = {};
+      projects.forEach((p) => {
+        pCounts[p.company_id] = (pCounts[p.company_id] || 0) + 1;
+      });
+      setProjectCounts(pCounts);
     } finally { setLoading(false); }
   };
 
@@ -140,6 +147,9 @@ export default function Companies() {
                 <p className="flex items-center gap-1">
                   <Users className="w-3.5 h-3.5" /> {workerCounts[c.id] || 0} موظف مضاف
                 </p>
+                <p className="flex items-center gap-1">
+                  <FolderKanban className="w-3.5 h-3.5" /> {projectCounts[c.id] || 0} مشروع
+                </p>
                 {c.documents?.length > 0 && (
                   <p className="flex items-center gap-1">
                     <FileText className="w-3.5 h-3.5" /> {c.documents.length} مستند مرفق
@@ -164,6 +174,11 @@ export default function Companies() {
                 <Link to={`/company/${c.id}`}>
                   <Button variant="ghost" size="sm">
                     <LayoutGrid className="w-3.5 h-3.5 ml-1" /> لوحة المنشأة
+                  </Button>
+                </Link>
+                <Link to={`/projects?company=${c.id}`}>
+                  <Button variant="ghost" size="sm">
+                    <FolderKanban className="w-3.5 h-3.5 ml-1" /> المشاريع
                   </Button>
                 </Link>
                 <Button variant="ghost" size="sm" onClick={() => handleEdit(c)}>
