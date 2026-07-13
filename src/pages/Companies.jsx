@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Building2, Plus, Pencil, Trash2, Search, UploadCloud, FileText, Link2, MapPin, LayoutGrid, Users, FolderKanban } from "lucide-react";
+import { Building2, Plus, Pencil, Trash2, Search, UploadCloud, FileText, Link2, MapPin, LayoutGrid, Users, FolderKanban, ClipboardList } from "lucide-react";
 import { Link } from "react-router-dom";
 import "leaflet/dist/leaflet.css";
 import { Button } from "@/components/ui/button";
@@ -179,6 +179,11 @@ export default function Companies() {
                 <Link to={`/projects?company=${c.id}`}>
                   <Button variant="ghost" size="sm">
                     <FolderKanban className="w-3.5 h-3.5 ml-1" /> المشاريع
+                  </Button>
+                </Link>
+                <Link to={`/tasks?company=${c.id}`}>
+                  <Button variant="ghost" size="sm">
+                    <ClipboardList className="w-3.5 h-3.5 ml-1" /> المهام
                   </Button>
                 </Link>
                 <Button variant="ghost" size="sm" onClick={() => handleEdit(c)}>

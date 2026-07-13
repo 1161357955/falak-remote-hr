@@ -65,6 +65,7 @@ export default function Tasks() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("الكل");
   const [filterProject, setFilterProject] = useState(() => new URLSearchParams(window.location.search).get("project") || "الكل");
+  const [filterCompany] = useState(() => new URLSearchParams(window.location.search).get("company") || null);
   const [expandedId, setExpandedId] = useState(null);
   const [generating, setGenerating] = useState(false);
   const [sortBy, setSortBy] = useState("due_date");
@@ -167,7 +168,8 @@ export default function Tasks() {
       const matchSearch = t.title?.includes(search);
       const matchStatus = filterStatus === "الكل" || t.status === filterStatus;
       const matchProject = filterProject === "الكل" || t.project_id === filterProject;
-      return matchSearch && matchStatus && matchProject;
+      const matchCompany = !filterCompany || projects.find((p) => p.id === t.project_id)?.company_id === filterCompany;
+      return matchSearch && matchStatus && matchProject && matchCompany;
     })
     .sort((a, b) => {
       if (sortBy === "due_date") {
