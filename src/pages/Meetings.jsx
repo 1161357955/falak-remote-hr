@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Video, Plus, Trash2, Link as LinkIcon, CalendarClock, Users, X, CheckCircle2, Zap } from "lucide-react";
+import { Video, Plus, Trash2, Link as LinkIcon, CalendarClock, Users, X, CheckCircle2, Zap, LogIn, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,26 +33,47 @@ export default function Meetings() {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [highlightId] = useState(() => new URLSearchParams(window.location.search).get("meeting") || null);
+  const [attendance, setAttendance] = useState([]);
+  const [expandedId, setExpandedId] = useState(null);
   const { toast } = useToast();
 
   useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
     try {
-      const [user, m, w] = await Promise.all([
+      const [user, m, w, a] = await Promise.all([
         base44.auth.me(),
         base44.entities.Meeting.list("-meeting_date"),
         base44.entities.RemoteWorker.list(),
+        base44.entities.MeetingAttendance.list("-joined_at"),
       ]);
       setCurrentUser(user);
       setMeetings(m);
       setWorkers(w);
+      setAttendance(a);
     } finally {
       setLoading(false);
     }
   };
 
   const getParticipantName = (email) => workers.find((w) => w.email === email)?.full_name || email;
+
+  const getAttendance = (meetingId) => attendance.filter((a) => a.meeting_id === meetingId);
+
+  const handleJoin = async (m) => {
+    await base44.entities.MeetingAttendance.create({
+      meeting_id: m.id,
+      attendee_name: currentUser?.full_name,
+      attendee_email: currentUser?.email,
+      joined_at: new Date().toISOString(),
+    });
+    if (m.status === "مجدولة") {
+      await base44.entities.Meeting.update(m.id, { status: "منعقدة" });
+    }
+    await loadData();
+    toast({ title: "تم تسجيل انضمامك للاجتماع" });
+    if (m.meeting_link) window.open(m.meeting_link, "_blank");
+  };
 
   const toggleParticipant = (email) => {
     setForm((f) => ({
@@ -157,6 +178,7 @@ export default function Meetings() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  <Button size="sm" className="gap-1.5" onClick={() => handleJoin(m)}><LogIn className="w-3.5 h-3.5" /> انضمام</Button>
                   {m.meeting_link && (
                     <a href={m.meeting_link} target="_blank" rel="noreferrer">
                       <Button variant="outline" size="sm" className="gap-1.5"><LinkIcon className="w-3.5 h-3.5" /> رابط الاجتماع</Button>
@@ -173,6 +195,26 @@ export default function Meetings() {
                   <Button variant="ghost" size="icon" className="text-red-500" onClick={() => handleDelete(m.id)}><Trash2 className="w-4 h-4" /></Button>
                 </div>
               </div>
+              <button
+                className="mt-3 text-xs text-muted-foreground flex items-center gap-1.5 hover:text-foreground"
+                onClick={() => setExpandedId(expandedId === m.id ? null : m.id)}
+              >
+                <ListChecks className="w-3.5 h-3.5" /> سجل الحضور ({getAttendance(m.id).length})
+              </button>
+              {expandedId === m.id && (
+                <div className="mt-2 border-t pt-2 space-y-1">
+                  {getAttendance(m.id).length === 0 ? (
+                    <p className="text-xs text-muted-foreground">لا يوجد حضور مسجل بعد</p>
+                  ) : (
+                    getAttendance(m.id).map((a) => (
+                      <div key={a.id} className="text-xs flex items-center justify-between text-muted-foreground">
+                        <span>{a.attendee_name || a.attendee_email}</span>
+                        <span>{new Date(a.joined_at).toLocaleString("ar-SA")}</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>
