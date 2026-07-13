@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Building2, Users, FolderKanban,
-  ClipboardList, BarChart3, LogOut, Star, Columns3, X, ChevronsRight, ChevronsLeft, Wallet, Receipt, CalendarDays, Video, MessageSquare
+  ClipboardList, BarChart3, LogOut, Star, Columns3, X, ChevronsRight, ChevronsLeft, Wallet, Receipt, CalendarDays, Video, MessageSquare, UserCircle
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
@@ -24,6 +24,7 @@ const adminNavItems = [
 
 const restrictedNavItems = [
   { label: "لوحة التحكم", icon: LayoutDashboard, path: "/" },
+  { label: "حسابي", icon: UserCircle, path: "/worker-dashboard" },
   { label: "الاجتماعات", icon: Video, path: "/meetings" },
   { label: "الاتصالات الداخلية", icon: MessageSquare, path: "/messages" },
 ];
