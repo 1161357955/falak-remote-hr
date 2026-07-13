@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
 import { Menu, Star } from "lucide-react";
 import Sidebar from "./Sidebar";
+import NotificationBell from "./NotificationBell";
 
 export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
@@ -24,7 +25,14 @@ export default function AppLayout() {
           <Star className="w-4 h-4 text-white" />
         </div>
         <span className="font-bold">فلك</span>
+        <div className="mr-auto">
+          <NotificationBell />
+        </div>
       </header>
+
+      <div className="hidden lg:block fixed top-4 left-4 z-30">
+        <NotificationBell />
+      </div>
 
       <main className={`min-h-screen pt-14 lg:pt-0 transition-all duration-200 ${collapsed ? "lg:mr-20" : "lg:mr-64"}`}>
         <div className="p-4 md:p-8">

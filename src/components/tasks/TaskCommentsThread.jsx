@@ -2,9 +2,10 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Send, Paperclip, Loader2, Link2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import CommentItem from "@/components/tasks/CommentItem";
+import MentionTextarea from "@/components/tasks/MentionTextarea";
+import { extractMentionedWorkers } from "@/lib/mentions";
 
 export default function TaskCommentsThread({ task }) {
   const [comments, setComments] = useState([]);
@@ -15,10 +16,12 @@ export default function TaskCommentsThread({ task }) {
   const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState(false);
   const [user, setUser] = useState(null);
+  const [workers, setWorkers] = useState([]);
 
   useEffect(() => {
     base44.entities.TaskComment.filter({ task_id: task.id }, "created_date").then(setComments);
     base44.auth.me().then(setUser);
+    base44.entities.RemoteWorker.list().then(setWorkers);
   }, [task.id]);
 
   const handleUpload = async (e) => {
@@ -46,6 +49,17 @@ export default function TaskCommentsThread({ task }) {
         link_url: linkUrl,
         reactions: [],
       });
+      const mentioned = extractMentionedWorkers(content, workers).filter((w) => w.email && w.email !== user?.email);
+      await Promise.all(
+        mentioned.map((w) =>
+          base44.entities.Notification.create({
+            recipient_email: w.email,
+            title: "إشارة جديدة",
+            message: `أشار إليك ${user?.full_name || "مستخدم"} في تعليق على مهمة "${task.title}"`,
+            task_id: task.id,
+          })
+        )
+      );
       setContent("");
       setFileUrl("");
       setLinkUrl("");
@@ -80,7 +94,7 @@ export default function TaskCommentsThread({ task }) {
         )}
       </div>
       <div className="space-y-2">
-        <Textarea placeholder="اكتب تعليقاً..." value={content} onChange={(e) => setContent(e.target.value)} rows={2} className="bg-background" />
+        <MentionTextarea placeholder="اكتب تعليقاً... استخدم @ للإشارة إلى موظف" value={content} onChange={setContent} workers={workers} rows={2} className="bg-background" />
         {showLinkInput && (
           <div className="flex items-center gap-2">
             <Input placeholder="https://..." value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} className="text-sm bg-background" />

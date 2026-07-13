@@ -3,9 +3,10 @@ import { base44 } from "@/api/base44Client";
 import { Send, Paperclip, Loader2, Link2, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import FormDialog from "@/components/shared/FormDialog";
 import CommentItem from "@/components/tasks/CommentItem";
+import MentionTextarea from "@/components/tasks/MentionTextarea";
+import { extractMentionedWorkers } from "@/lib/mentions";
 
 export default function TaskCommentsDialog({ open, onOpenChange, task }) {
   const [comments, setComments] = useState([]);
@@ -16,11 +17,13 @@ export default function TaskCommentsDialog({ open, onOpenChange, task }) {
   const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState(false);
   const [user, setUser] = useState(null);
+  const [workers, setWorkers] = useState([]);
 
   useEffect(() => {
     if (open && task) {
       base44.entities.TaskComment.filter({ task_id: task.id }, "created_date").then(setComments);
       base44.auth.me().then(setUser);
+      base44.entities.RemoteWorker.list().then(setWorkers);
     }
   }, [open, task]);
 
@@ -49,6 +52,17 @@ export default function TaskCommentsDialog({ open, onOpenChange, task }) {
         link_url: linkUrl,
         reactions: [],
       });
+      const mentioned = extractMentionedWorkers(content, workers).filter((w) => w.email && w.email !== user?.email);
+      await Promise.all(
+        mentioned.map((w) =>
+          base44.entities.Notification.create({
+            recipient_email: w.email,
+            title: "إشارة جديدة",
+            message: `أشار إليك ${user?.full_name || "مستخدم"} في تعليق على مهمة "${task.title}"`,
+            task_id: task.id,
+          })
+        )
+      );
       setContent("");
       setFileUrl("");
       setLinkUrl("");
@@ -86,7 +100,7 @@ export default function TaskCommentsDialog({ open, onOpenChange, task }) {
           )}
         </div>
         <div className="border-t pt-3 space-y-2">
-          <Textarea placeholder="اكتب تعليقاً..." value={content} onChange={(e) => setContent(e.target.value)} rows={2} />
+          <MentionTextarea placeholder="اكتب تعليقاً... استخدم @ للإشارة إلى موظف" value={content} onChange={setContent} workers={workers} rows={2} />
           {showLinkInput && (
             <div className="flex items-center gap-2">
               <Input placeholder="https://..." value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} className="text-sm" />
