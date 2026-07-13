@@ -13,27 +13,13 @@ import FormDialog from "@/components/shared/FormDialog";
 import HoursMinutesInput from "@/components/tasks/HoursMinutesInput";
 import TaskCommentsThread from "@/components/tasks/TaskCommentsThread";
 import { useToast } from "@/components/ui/use-toast";
+import { CATEGORY_TASKS } from "@/lib/projectTaskLists";
 
 const emptyForm = {
   title: "", description: "", project_id: "", worker_id: "",
   status: "جديدة", priority: "متوسطة", due_date: "",
   estimated_h: "", estimated_m: "", actual_h: "", actual_m: "",
 };
-
-const RASHIDA_STAGES = [
-  "حجز اسم تجاري",
-  "إصدار السجل التجاري",
-  "فتح ملف منشأة في وزارة الموارد البشرية والتنمية الاجتماعية",
-  "تسجيل المنشأة في التأمينات الاجتماعية",
-  "استئجار موقع",
-  "استخراج موافقة الدفاع المدني",
-  "استخراج رخصة البلدية",
-  "استخراج التأشيرات",
-  "تصميم العلامة التجارية",
-  "الحملة التسويقية",
-  "الإطلاق",
-  "التوسع بالعمل",
-];
 
 const decimalToHM = (decimal) => {
   const total = Number(decimal) || 0;
@@ -282,10 +268,12 @@ export default function Tasks() {
         <div className="space-y-4">
           <div>
             <Label>عنوان المهمة *</Label>
-            {projects.find((p) => p.id === form.project_id)?.category === "برنامج الإدارة الرشيدة" && (
+            {CATEGORY_TASKS[projects.find((p) => p.id === form.project_id)?.category] && (
               <Select value="" onValueChange={(v) => setForm({ ...form, title: v })}>
-                <SelectTrigger className="mb-2"><SelectValue placeholder="اختر من مراحل الإدارة الرشيدة" /></SelectTrigger>
-                <SelectContent>{RASHIDA_STAGES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                <SelectTrigger className="mb-2"><SelectValue placeholder={`اختر من قائمة مهام "${projects.find((p) => p.id === form.project_id)?.category}"`} /></SelectTrigger>
+                <SelectContent>
+                  {CATEGORY_TASKS[projects.find((p) => p.id === form.project_id)?.category].map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
               </Select>
             )}
             <div className="flex gap-2">

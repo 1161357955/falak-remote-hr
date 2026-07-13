@@ -12,88 +12,11 @@ import PageHeader from "@/components/shared/PageHeader";
 import EmptyState from "@/components/shared/EmptyState";
 import FormDialog from "@/components/shared/FormDialog";
 import { useToast } from "@/components/ui/use-toast";
+import { PROJECT_CATEGORIES, CATEGORY_TASKS } from "@/lib/projectTaskLists";
 
 const emptyForm = {
   title: "", description: "", company_id: "", category: "عام", status: "جديد",
   start_date: "", end_date: "", budget: "", progress: 0,
-};
-
-const PROJECT_CATEGORIES = ["برنامج الإدارة الرشيدة", "أنظمة البرمجيات كخدمة", "المشاريع الرقمية", "عام"];
-
-const GOVERNANCE_TASKS = [
-  "حجز الاسم التجاري",
-  "إصدار السجل التجاري",
-  "فتح ملف المنشأة في وزارة الموارد البشرية والتنمية الاجتماعية",
-  "تسجيل المنشأة في التأمينات الاجتماعية",
-  "استئجار موقع للمنشأة",
-  "استخراج موافقة الدفاع المدني",
-  "استخراج رخصة البلدية",
-  "استخراج التأشيرات",
-  "تصميم العلامة التجارية",
-  "إطلاق الحملة التسويقية",
-  "إطلاق المنشأة",
-  "التوسع في العمل",
-];
-
-const SAAS_TASKS = [
-  "تحديد نطاق المنتج الأدنى (MVP)",
-  "هندسة المتطلبات (Requirements Engineering)",
-  "تصميم معمارية البيانات (Database Schema Design)",
-  "رسم المخططات الهيكلية (Wireframes)",
-  "تصميم واجهات المستخدم (UI Design)",
-  "النمذجة التفاعلية (Prototyping)",
-  "اختيار التقنيات (Tech Stack)",
-  "إعداد بنية تعدد المستأجرين (Multi-Tenancy Architecture)",
-  "نظام الهوية والأمان (IAM & Auth)",
-  "إدارة الهيكل التنظيمي والوظائف والملفات الشخصية للموظفين (HRM)",
-  "نظام الحضور والانصراف، الإجازات، والورديات (HRM)",
-  "مسير الرواتب (Payroll) وحساب المستحقات والخصومات والضرائب (HRM)",
-  "إدارة العملاء المحتملين (Leads) والعملاء الحاليين (Contacts) (CRM)",
-  "قمع المبيعات (Sales Pipeline) وتتبع الصفقات والمراحل (CRM)",
-  "نظام التذاكر والدعم الفني لخدمة العملاء (CRM)",
-  "المالية والمحاسبة: شجرة الحسابات والقيود والفواتير (ERP)",
-  "المخزون والمشتريات: إدارة المستودعات والموردين (ERP)",
-  "التقارير ولوحات البيانات (ERP)",
-  "بوابة الدفع واشتراكات النظام (Billing & Subscriptions)",
-  "نظام الإشعارات (داخلي، بريد، SMS/WhatsApp)",
-  "الربط البرمجي (Webhooks & APIs)",
-  "الاختبارات البرمجية التلقائية (Unit & Integration Testing)",
-  "اختبار الأمان وضمان العزل (Security & Isolation Testing)",
-  "اختبار الضغط (Load Testing)",
-  "إعداد البيئات (Development, Staging, Production)",
-  "أتمتة الإطلاق (CI/CD Pipelines)",
-  "النسخ الاحتياطي والأمان (Backups & WAF)",
-  "أدوات المراقبة (Monitoring)",
-  "نظام تلقي الملاحظات (Bug Tracking)",
-  "التحديثات المستمرة",
-];
-
-const DIGITAL_PROJECT_TASKS = [
-  "تحديد نطاق المشروع (Scope)",
-  "تحديد المتطلبات التقنية (Technical Specs)",
-  "دراسة الالتزام والقوانين (Compliance)",
-  "وضع الميزانية (Budgeting)",
-  "شراء وتجهيز الأنظمة السحابية",
-  "إعداد أدوات التواصل الداخلي والإدارة",
-  "برمجة وتجهيز شجرة الرد الآلي (IVR Tree)",
-  "الأمن السيبراني (2FA وVPN)",
-  "صياغة الوصف الوظيفي",
-  "التوظيف وإعداد العقود",
-  "تجهيز بيئة العمل للموظف",
-  "برنامج التدريب المكثف على الأنظمة",
-  "التدريب على سيناريوهات التعامل مع المشاكل (Playbooks)",
-  "اختبار الضغط والاتصال (Stress Testing)",
-  "محاكاة العمليات (Simulation)",
-  "تعديل الأخطاء (Debugging)",
-  "الإطلاق الكامل (Official Launch)",
-  "مراقبة مؤشرات الأداء الرئيسية (KPIs)",
-  "الدعم التقني المستمر (Maintenance)",
-];
-
-const CATEGORY_TASKS = {
-  "برنامج الإدارة الرشيدة": GOVERNANCE_TASKS,
-  "أنظمة البرمجيات كخدمة": SAAS_TASKS,
-  "المشاريع الرقمية": DIGITAL_PROJECT_TASKS,
 };
 
 export default function Projects() {
