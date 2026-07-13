@@ -133,21 +133,23 @@ export default function WorkerDashboard() {
 
   return (
     <div>
-      <PageHeader title={`مرحباً، ${worker.full_name}`} description="نظرة عامة على مهامك ومشاريعك">
-        <div className="w-10 h-10 rounded-full bg-muted overflow-hidden flex items-center justify-center border shrink-0">
-          {worker.profile_photo_url ? (
-            <img src={worker.profile_photo_url} alt={worker.full_name} className="w-full h-full object-cover" />
-          ) : (
-            <User className="w-5 h-5 text-muted-foreground" />
-          )}
-        </div>
-        <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setProfileOpen(true)}>
-          <UserCog className="w-4 h-4" /> تعديل الملف الشخصي
-        </Button>
-        <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setPasswordOpen(true)}>
-          <KeyRound className="w-4 h-4" /> تغيير كلمة المرور
-        </Button>
-      </PageHeader>
+      <div className="sticky top-14 lg:top-0 z-20 bg-background -mx-4 px-4 md:-mx-8 md:px-8 pt-4 md:pt-8 -mt-4 md:-mt-8 pb-2 border-b">
+        <PageHeader title={`مرحباً، ${worker.full_name}`} description="نظرة عامة على مهامك ومشاريعك">
+          <div className="w-10 h-10 rounded-full bg-muted overflow-hidden flex items-center justify-center border shrink-0">
+            {worker.profile_photo_url ? (
+              <img src={worker.profile_photo_url} alt={worker.full_name} className="w-full h-full object-cover" />
+            ) : (
+              <User className="w-5 h-5 text-muted-foreground" />
+            )}
+          </div>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setProfileOpen(true)}>
+            <UserCog className="w-4 h-4" /> تعديل الملف الشخصي
+          </Button>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setPasswordOpen(true)}>
+            <KeyRound className="w-4 h-4" /> تغيير كلمة المرور
+          </Button>
+        </PageHeader>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
         <StatCard title="إجمالي المهام" value={tasks.length} icon={ClipboardList} color="primary" />
