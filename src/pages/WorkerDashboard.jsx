@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { ClipboardList, FolderKanban, CheckCircle2, Clock, Search, Eye, UserCog, KeyRound, User } from "lucide-react";
+import { startOfWeek, endOfWeek, format } from "date-fns";
 import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
@@ -10,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import TaskDetailDialog from "@/components/tasks/TaskDetailDialog";
 import WorkerProfileDialog from "@/components/worker-dashboard/WorkerProfileDialog";
 import ChangePasswordDialog from "@/components/worker-dashboard/ChangePasswordDialog";
+import WorkerTimeClock from "@/components/worker-dashboard/WorkerTimeClock";
+import WeeklyHoursCard from "@/components/worker-dashboard/WeeklyHoursCard";
 
 const ACCEPTANCE_COLORS = {
   "قيد الانتظار": "bg-amber-100 text-amber-700",
@@ -36,6 +39,7 @@ export default function WorkerDashboard() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
+  const [weekLogs, setWeekLogs] = useState([]);
 
   useEffect(() => {
     loadData();
@@ -51,6 +55,7 @@ export default function WorkerDashboard() {
       }
       const w = workers[0];
       setWorker(w);
+      await loadWeekLogs(w.id);
       const workerTasks = await base44.entities.Task.filter({ worker_id: w.id }, "-created_date");
       setTasks(workerTasks);
       const projectIds = [...new Set(workerTasks.map((t) => t.project_id).filter(Boolean))];
@@ -71,6 +76,13 @@ export default function WorkerDashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadWeekLogs = async (workerId) => {
+    const weekStart = format(startOfWeek(new Date(), { weekStartsOn: 0 }), "yyyy-MM-dd");
+    const weekEnd = format(endOfWeek(new Date(), { weekStartsOn: 0 }), "yyyy-MM-dd");
+    const logs = await base44.entities.PerformanceLog.filter({ worker_id: workerId });
+    setWeekLogs(logs.filter((l) => l.date >= weekStart && l.date <= weekEnd));
   };
 
   const handleOpenTask = (task) => {
@@ -141,6 +153,11 @@ export default function WorkerDashboard() {
         <StatCard title="إجمالي المهام" value={tasks.length} icon={ClipboardList} color="primary" />
         <StatCard title="قيد التنفيذ" value={inProgressCount} icon={Clock} color="amber" />
         <StatCard title="مهام مكتملة" value={completedCount} icon={CheckCircle2} color="green" />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <WorkerTimeClock worker={worker} onLogUpdated={() => loadWeekLogs(worker.id)} />
+        <WeeklyHoursCard logs={weekLogs} />
       </div>
 
       <div className="bg-card rounded-2xl border p-6 mb-8">
