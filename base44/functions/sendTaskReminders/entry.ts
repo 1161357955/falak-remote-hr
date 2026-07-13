@@ -1,19 +1,21 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
+
+function formatDateKey(d) {
+  return d.toISOString().split("T")[0];
+}
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
     const tasks = await base44.asServiceRole.entities.Task.filter({});
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const soonLimit = new Date(today);
-    soonLimit.setDate(soonLimit.getDate() + 2);
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowKey = formatDateKey(tomorrow);
 
     const dueSoonTasks = tasks.filter((t) => {
-      if (!t.due_date || t.status === "مكتملة" || t.status === "ملغاة") return false;
-      const due = new Date(t.due_date);
-      return due >= today && due <= soonLimit;
+      if (!t.due_date || t.status === "مكتملة" || t.status === "ملغاة" || t.reminder_sent) return false;
+      return t.due_date.slice(0, 10) === tomorrowKey;
     });
 
     if (dueSoonTasks.length === 0) {
@@ -49,13 +51,24 @@ Deno.serve(async (req) => {
         </div>
       </div>`;
 
-      await base44.asServiceRole.integrations.Core.SendEmail({
-        to: worker.email,
-        subject: `تذكير: اقتراب موعد تسليم مهمة "${task.title}"`,
-        body: emailHtml,
-        from_name: "فلك للموارد البشرية",
+      const resendResponse = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${Deno.env.get("RESEND_API_KEY")}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: `فلك للموارد البشرية <${Deno.env.get("RESEND_FROM_EMAIL")}>`,
+          to: [worker.email],
+          subject: `تذكير: اقتراب موعد تسليم مهمة "${task.title}"`,
+          html: emailHtml,
+        }),
       });
-      remindersSent++;
+
+      if (resendResponse.ok) {
+        await base44.asServiceRole.entities.Task.update(task.id, { reminder_sent: true });
+        remindersSent++;
+      }
     }
 
     return Response.json({ success: true, remindersSent, totalDueSoon: dueSoonTasks.length });
