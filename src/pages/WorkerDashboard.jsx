@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { ClipboardList, FolderKanban, CheckCircle2, Clock, Search, Eye } from "lucide-react";
+import { ClipboardList, FolderKanban, CheckCircle2, Clock, Search, Eye, UserCog, KeyRound, User } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import TaskDetailDialog from "@/components/tasks/TaskDetailDialog";
+import WorkerProfileDialog from "@/components/worker-dashboard/WorkerProfileDialog";
+import ChangePasswordDialog from "@/components/worker-dashboard/ChangePasswordDialog";
 
 const ACCEPTANCE_COLORS = {
   "قيد الانتظار": "bg-amber-100 text-amber-700",
@@ -32,6 +34,8 @@ export default function WorkerDashboard() {
   const [search, setSearch] = useState("");
   const [selectedTask, setSelectedTask] = useState(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [passwordOpen, setPasswordOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -117,7 +121,21 @@ export default function WorkerDashboard() {
 
   return (
     <div>
-      <PageHeader title={`مرحباً، ${worker.full_name}`} description="نظرة عامة على مهامك ومشاريعك" />
+      <PageHeader title={`مرحباً، ${worker.full_name}`} description="نظرة عامة على مهامك ومشاريعك">
+        <div className="w-10 h-10 rounded-full bg-muted overflow-hidden flex items-center justify-center border shrink-0">
+          {worker.profile_photo_url ? (
+            <img src={worker.profile_photo_url} alt={worker.full_name} className="w-full h-full object-cover" />
+          ) : (
+            <User className="w-5 h-5 text-muted-foreground" />
+          )}
+        </div>
+        <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setProfileOpen(true)}>
+          <UserCog className="w-4 h-4" /> تعديل الملف الشخصي
+        </Button>
+        <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setPasswordOpen(true)}>
+          <KeyRound className="w-4 h-4" /> تغيير كلمة المرور
+        </Button>
+      </PageHeader>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
         <StatCard title="إجمالي المهام" value={tasks.length} icon={ClipboardList} color="primary" />
@@ -197,6 +215,8 @@ export default function WorkerDashboard() {
       </div>
 
       <TaskDetailDialog open={detailOpen} onOpenChange={setDetailOpen} task={selectedTask} worker={worker} onUpdated={handleTaskUpdated} />
+      <WorkerProfileDialog open={profileOpen} onOpenChange={setProfileOpen} worker={worker} onUpdated={setWorker} />
+      <ChangePasswordDialog open={passwordOpen} onOpenChange={setPasswordOpen} />
     </div>
   );
 }
