@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Building2, Plus, Pencil, Trash2, Search, UploadCloud, FileText, Link2, MapPin, LayoutGrid } from "lucide-react";
+import { Building2, Plus, Pencil, Trash2, Search, UploadCloud, FileText, Link2, MapPin, LayoutGrid, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import "leaflet/dist/leaflet.css";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ const emptyForm = {
 
 export default function Companies() {
   const [companies, setCompanies] = useState([]);
+  const [workerCounts, setWorkerCounts] = useState({});
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
@@ -36,8 +37,16 @@ export default function Companies() {
 
   const loadData = async () => {
     try {
-      const data = await base44.entities.Company.list("-created_date");
+      const [data, workers] = await Promise.all([
+        base44.entities.Company.list("-created_date"),
+        base44.entities.RemoteWorker.list(),
+      ]);
       setCompanies(data);
+      const counts = {};
+      workers.forEach((w) => {
+        counts[w.company_id] = (counts[w.company_id] || 0) + 1;
+      });
+      setWorkerCounts(counts);
     } finally { setLoading(false); }
   };
 
@@ -128,6 +137,9 @@ export default function Companies() {
                 {c.city && <p>المدينة: {c.city}</p>}
                 {c.nitaqat_color && <p>النطاق: {c.nitaqat_color}</p>}
                 {c.contact_person && <p>مسؤول التواصل: {c.contact_person}</p>}
+                <p className="flex items-center gap-1">
+                  <Users className="w-3.5 h-3.5" /> {workerCounts[c.id] || 0} موظف مضاف
+                </p>
                 {c.documents?.length > 0 && (
                   <p className="flex items-center gap-1">
                     <FileText className="w-3.5 h-3.5" /> {c.documents.length} مستند مرفق
