@@ -1,0 +1,31 @@
+{
+  "name": "TaskActivity",
+  "type": "object",
+  "properties": {
+    "task_id": {
+      "type": "string",
+      "title": "\u0627\u0644\u0645\u0647\u0645\u0629"
+    },
+    "action": {
+      "type": "string",
+      "title": "\u0646\u0648\u0639 \u0627\u0644\u062d\u062f\u062b",
+      "enum": [
+        "accepted",
+        "rejected",
+        "status_changed"
+      ]
+    },
+    "description": {
+      "type": "string",
+      "title": "\u0627\u0644\u0648\u0635\u0641"
+    },
+    "actor_name": {
+      "type": "string",
+      "title": "\u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645"
+    }
+  },
+  "required": [
+    "task_id",
+    "action"
+  ]
+}

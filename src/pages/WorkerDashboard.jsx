@@ -1,13 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { ClipboardList, FolderKanban, CheckCircle2, Clock, Search, MessageSquare } from "lucide-react";
+import { ClipboardList, FolderKanban, CheckCircle2, Clock, Search, Eye } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import TaskCommentsDialog from "@/components/tasks/TaskCommentsDialog";
+import TaskDetailDialog from "@/components/tasks/TaskDetailDialog";
+
+const ACCEPTANCE_COLORS = {
+  "قيد الانتظار": "bg-amber-100 text-amber-700",
+  "مقبولة": "bg-emerald-100 text-emerald-700",
+  "مرفوضة": "bg-red-100 text-red-700",
+};
 
 const STATUS_OPTIONS = ["جديدة", "قيد التنفيذ", "مكتملة", "ملغاة"];
 
@@ -25,7 +31,7 @@ export default function WorkerDashboard() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedTask, setSelectedTask] = useState(null);
-  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -53,7 +59,7 @@ export default function WorkerDashboard() {
         const found = workerTasks.find((t) => t.id === taskParam);
         if (found) {
           setSelectedTask(found);
-          setCommentsOpen(true);
+          setDetailOpen(true);
         }
       }
     } catch (e) {
@@ -63,9 +69,14 @@ export default function WorkerDashboard() {
     }
   };
 
-  const handleOpenComments = (task) => {
+  const handleOpenTask = (task) => {
     setSelectedTask(task);
-    setCommentsOpen(true);
+    setDetailOpen(true);
+  };
+
+  const handleTaskUpdated = (updatedTask) => {
+    setSelectedTask(updatedTask);
+    setTasks((prev) => prev.map((t) => (t.id === updatedTask.id ? updatedTask : t)));
   };
 
   if (loading) {
@@ -91,6 +102,12 @@ export default function WorkerDashboard() {
   const handleStatusChange = async (taskId, newStatus) => {
     await base44.entities.Task.update(taskId, { status: newStatus });
     setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t)));
+    await base44.entities.TaskActivity.create({
+      task_id: taskId,
+      action: "status_changed",
+      description: `تغيرت الحالة إلى "${newStatus}"`,
+      actor_name: worker?.full_name || "",
+    });
   };
 
   const filteredTasks = tasks.filter((t) =>
@@ -152,12 +169,17 @@ export default function WorkerDashboard() {
             {filteredTasks.map((task) => (
               <div key={task.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/50 gap-3">
                 <div>
-                  <p className="text-sm font-medium">{task.title}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium">{task.title}</p>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${ACCEPTANCE_COLORS[task.acceptance_status || "قيد الانتظار"]}`}>
+                      {task.acceptance_status || "قيد الانتظار"}
+                    </span>
+                  </div>
                   <p className="text-xs text-muted-foreground mt-0.5">{task.due_date || "بدون تاريخ"}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenComments(task)}>
-                    <MessageSquare className="w-4 h-4" />
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenTask(task)}>
+                    <Eye className="w-4 h-4" />
                   </Button>
                   <Select value={task.status} onValueChange={(val) => handleStatusChange(task.id, val)}>
                     <SelectTrigger className={`w-40 h-8 text-xs border-0 font-medium ${STATUS_COLORS[task.status] || "bg-gray-100 text-gray-700"}`}>
@@ -174,7 +196,7 @@ export default function WorkerDashboard() {
         )}
       </div>
 
-      <TaskCommentsDialog open={commentsOpen} onOpenChange={setCommentsOpen} task={selectedTask} />
+      <TaskDetailDialog open={detailOpen} onOpenChange={setDetailOpen} task={selectedTask} worker={worker} onUpdated={handleTaskUpdated} />
     </div>
   );
 }
