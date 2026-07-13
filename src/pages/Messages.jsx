@@ -3,6 +3,8 @@ import { base44 } from "@/api/base44Client";
 import PageHeader from "@/components/shared/PageHeader";
 import ChatSidebar from "@/components/messages/ChatSidebar";
 import ChatThread from "@/components/messages/ChatThread";
+import CallModal from "@/components/messages/CallModal";
+import IncomingCallBanner from "@/components/messages/IncomingCallBanner";
 import FormDialog from "@/components/shared/FormDialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,8 +21,11 @@ export default function Messages() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newChannel, setNewChannel] = useState({ name: "", description: "" });
+  const [activeCall, setActiveCall] = useState(null);
+  const [incomingCall, setIncomingCall] = useState(null);
   const { toast } = useToast();
   const selectedIdRef = useRef(null);
+  const currentUserRef = useRef(null);
 
   useEffect(() => { init(); }, []);
 
@@ -39,6 +44,18 @@ export default function Messages() {
     return unsubscribe;
   }, []);
 
+  useEffect(() => {
+    const unsubscribe = base44.entities.CallSignal.subscribe((event) => {
+      if (event.type !== "create") return;
+      const s = event.data;
+      const me = currentUserRef.current?.email;
+      if (s.type === "offer" && s.to_email === me) {
+        setIncomingCall(s);
+      }
+    });
+    return unsubscribe;
+  }, []);
+
   const init = async () => {
     try {
       const [user, w, c] = await Promise.all([
@@ -47,6 +64,7 @@ export default function Messages() {
         base44.entities.Channel.list("created_date"),
       ]);
       setCurrentUser(user);
+      currentUserRef.current = user;
       setWorkers(w);
       let allChannels = c;
       const hasGeneral = c.some((ch) => ch.type === "قناة عامة" && ch.name === "عام");
@@ -117,6 +135,36 @@ export default function Messages() {
     setSelectedChannel(existing);
   };
 
+  const handleStartCall = () => {
+    if (!selectedChannel || selectedChannel.type !== "محادثة مباشرة") return;
+    const peerEmail = (selectedChannel.participant_emails || []).find((e) => e !== currentUser?.email);
+    setActiveCall({ channelId: selectedChannel.id, peerEmail, peerName: getDmLabel(), isCaller: true });
+  };
+
+  const handleAcceptCall = () => {
+    setActiveCall({
+      channelId: incomingCall.channel_id,
+      peerEmail: incomingCall.from_email,
+      peerName: incomingCall.from_name || incomingCall.from_email,
+      isCaller: false,
+      incomingOffer: JSON.parse(incomingCall.payload),
+    });
+    base44.entities.CallSignal.delete(incomingCall.id);
+    setIncomingCall(null);
+  };
+
+  const handleDeclineCall = async () => {
+    await base44.entities.CallSignal.create({
+      channel_id: incomingCall.channel_id,
+      from_email: currentUser.email,
+      from_name: currentUser.full_name,
+      to_email: incomingCall.from_email,
+      type: "hangup",
+    });
+    base44.entities.CallSignal.delete(incomingCall.id);
+    setIncomingCall(null);
+  };
+
   const getDmLabel = () => {
     if (!selectedChannel || selectedChannel.type !== "محادثة مباشرة") return "";
     const otherEmail = (selectedChannel.participant_emails || []).find((e) => e !== currentUser?.email);
@@ -146,8 +194,29 @@ export default function Messages() {
           currentUser={currentUser}
           dmLabel={getDmLabel()}
           onSend={handleSend}
+          onStartCall={handleStartCall}
         />
       </div>
+
+      {incomingCall && !activeCall && (
+        <IncomingCallBanner
+          callerName={incomingCall.from_name || incomingCall.from_email}
+          onAccept={handleAcceptCall}
+          onDecline={handleDeclineCall}
+        />
+      )}
+
+      {activeCall && (
+        <CallModal
+          channelId={activeCall.channelId}
+          currentUser={currentUser}
+          peerEmail={activeCall.peerEmail}
+          peerName={activeCall.peerName}
+          isCaller={activeCall.isCaller}
+          incomingOffer={activeCall.incomingOffer}
+          onClose={() => setActiveCall(null)}
+        />
+      )}
 
       <FormDialog open={dialogOpen} onOpenChange={setDialogOpen} title="قناة جديدة">
         <div className="space-y-4">

@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Hash, MessageCircle, Send, Paperclip, X } from "lucide-react";
+import { Hash, MessageCircle, Send, Paperclip, X, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { base44 } from "@/api/base44Client";
 
-export default function ChatThread({ channel, messages, currentUser, dmLabel, onSend }) {
+export default function ChatThread({ channel, messages, currentUser, dmLabel, onSend, onStartCall }) {
   const [text, setText] = useState("");
   const [file, setFile] = useState(null);
   const [sending, setSending] = useState(false);
@@ -38,9 +38,16 @@ export default function ChatThread({ channel, messages, currentUser, dmLabel, on
 
   return (
     <div className="flex-1 bg-card border rounded-2xl flex flex-col max-h-[75vh]">
-      <div className="p-4 border-b flex items-center gap-2">
-        {channel.type === "قناة عامة" ? <Hash className="w-4 h-4 text-primary" /> : <MessageCircle className="w-4 h-4 text-primary" />}
-        <h3 className="font-bold text-sm">{channel.type === "قناة عامة" ? channel.name : dmLabel}</h3>
+      <div className="p-4 border-b flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          {channel.type === "قناة عامة" ? <Hash className="w-4 h-4 text-primary" /> : <MessageCircle className="w-4 h-4 text-primary" />}
+          <h3 className="font-bold text-sm">{channel.type === "قناة عامة" ? channel.name : dmLabel}</h3>
+        </div>
+        {channel.type === "محادثة مباشرة" && (
+          <Button size="sm" variant="outline" className="gap-1.5" onClick={onStartCall}>
+            <Phone className="w-3.5 h-3.5" /> مكالمة
+          </Button>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
