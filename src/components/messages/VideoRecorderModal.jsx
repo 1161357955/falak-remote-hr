@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Circle, Square, X, Send } from "lucide-react";
+import { Circle, Square, X, Send, Camera, Monitor } from "lucide-react";
 
 const MAX_SECONDS = 300;
 
@@ -16,24 +16,35 @@ export default function VideoRecorderModal({ onCapture, onClose }) {
   const [recording, setRecording] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [videoFile, setVideoFile] = useState(null);
+  const [source, setSource] = useState("camera");
+
+  const openStream = async (src) => {
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    try {
+      const stream = src === "screen"
+        ? await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
+        : await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      streamRef.current = stream;
+      if (videoRef.current) videoRef.current.srcObject = stream;
+    } catch {
+      onClose();
+    }
+  };
 
   useEffect(() => {
-    let stream;
-    (async () => {
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        streamRef.current = stream;
-        if (videoRef.current) videoRef.current.srcObject = stream;
-      } catch {
-        onClose();
-      }
-    })();
+    openStream("camera");
     return () => {
-      stream?.getTracks().forEach((t) => t.stop());
+      streamRef.current?.getTracks().forEach((t) => t.stop());
       clearInterval(timerRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleSourceChange = (src) => {
+    if (recording || previewUrl) return;
+    setSource(src);
+    openStream(src);
+  };
 
   const stopRecording = () => {
     recorderRef.current?.stop();
@@ -72,6 +83,16 @@ export default function VideoRecorderModal({ onCapture, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/80 z-[100] flex flex-col items-center justify-center p-4">
+      {!previewUrl && !recording && (
+        <div className="flex items-center gap-2 mb-3">
+          <Button size="sm" variant={source === "camera" ? "default" : "secondary"} className="gap-1.5" onClick={() => handleSourceChange("camera")}>
+            <Camera className="w-3.5 h-3.5" /> الكاميرا
+          </Button>
+          <Button size="sm" variant={source === "screen" ? "default" : "secondary"} className="gap-1.5" onClick={() => handleSourceChange("screen")}>
+            <Monitor className="w-3.5 h-3.5" /> مشاركة الشاشة
+          </Button>
+        </div>
+      )}
       <div className="relative w-full max-w-md aspect-video bg-black rounded-2xl overflow-hidden">
         {previewUrl ? (
           <video src={previewUrl} controls className="w-full h-full object-cover" />

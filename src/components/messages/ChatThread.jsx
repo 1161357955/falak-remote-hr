@@ -7,6 +7,24 @@ import VideoRecorderModal from "./VideoRecorderModal";
 import AudioRecorderModal from "./AudioRecorderModal";
 import { captureScreenshot } from "@/lib/captureScreenshot";
 
+const renderAttachment = (url) => {
+  const name = url.split("/").pop() || "";
+  if (/\/?video-\d+\.webm/.test(url) || name.startsWith("video-")) {
+    return <video src={url} controls className="mt-1 rounded-lg max-w-full max-h-64" />;
+  }
+  if (/\/?voice-\d+\.webm/.test(url) || name.startsWith("voice-")) {
+    return <audio src={url} controls className="mt-1 w-full" />;
+  }
+  if (/\.(png|jpe?g|gif|webp)$/i.test(url)) {
+    return <img src={url} alt="مرفق" className="mt-1 rounded-lg max-w-full max-h-64 object-cover" />;
+  }
+  return (
+    <a href={url} target="_blank" rel="noreferrer" className="text-xs underline block mt-1">
+      مرفق
+    </a>
+  );
+};
+
 export default function ChatThread({ channel, messages, currentUser, dmLabel, onSend, onStartCall }) {
   const [text, setText] = useState("");
   const [file, setFile] = useState(null);
@@ -79,11 +97,7 @@ export default function ChatThread({ channel, messages, currentUser, dmLabel, on
                 <div className={`max-w-[75%] rounded-2xl px-3 py-2 ${isMe ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
                   {!isMe && <p className="text-[11px] font-bold mb-0.5 opacity-70">{m.author_name}</p>}
                   {m.content && <p className="text-sm whitespace-pre-wrap">{m.content}</p>}
-                  {m.file_url && (
-                    <a href={m.file_url} target="_blank" rel="noreferrer" className="text-xs underline block mt-1">
-                      مرفق
-                    </a>
-                  )}
+                  {m.file_url && renderAttachment(m.file_url)}
                 </div>
               </div>
             );
