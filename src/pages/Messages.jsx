@@ -150,7 +150,9 @@ export default function Messages() {
 
   return (
     <div>
-      <PageHeader title="الاتصالات الداخلية" description="تواصل مع فريق العمل عبر القنوات والمحادثات المباشرة" />
+      <div className="sticky top-14 lg:top-0 z-20 bg-background -mx-4 px-4 md:-mx-8 md:px-8 pt-4 md:pt-8 -mt-4 md:-mt-8 pb-2 border-b">
+        <PageHeader title="الاتصالات الداخلية" description="تواصل مع فريق العمل عبر القنوات والمحادثات المباشرة" />
+      </div>
       <div className="flex flex-col lg:flex-row gap-4">
         <ChatSidebar
           channels={channels}

@@ -146,11 +146,13 @@ export default function Meetings() {
 
   return (
     <div>
-      <PageHeader title="الاجتماعات" description="تنسيق الاجتماعات الجماعية والثنائية داخل الفريق">
-        <Button onClick={() => { setForm(emptyForm); setDialogOpen(true); }} className="gap-2">
-          <Plus className="w-4 h-4" /> اجتماع جديد
-        </Button>
-      </PageHeader>
+      <div className="sticky top-14 lg:top-0 z-20 bg-background -mx-4 px-4 md:-mx-8 md:px-8 pt-4 md:pt-8 -mt-4 md:-mt-8 pb-2 border-b">
+        <PageHeader title="الاجتماعات" description="تنسيق الاجتماعات الجماعية والثنائية داخل الفريق">
+          <Button onClick={() => { setForm(emptyForm); setDialogOpen(true); }} className="gap-2">
+            <Plus className="w-4 h-4" /> اجتماع جديد
+          </Button>
+        </PageHeader>
+      </div>
 
       {meetings.length === 0 ? (
         <EmptyState icon={Video} title="لا توجد اجتماعات" description="ابدأ بإنشاء اجتماع جديد مع فريقك" />
