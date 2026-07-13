@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Building2, Users, FolderKanban,
-  ClipboardList, BarChart3, LogOut, Star, Columns3, X, ChevronsRight, ChevronsLeft, Wallet, Receipt, CalendarDays
+  ClipboardList, BarChart3, LogOut, Star, Columns3, X, ChevronsRight, ChevronsLeft, Wallet, Receipt, CalendarDays, Video
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
@@ -14,6 +14,7 @@ const adminNavItems = [
   { label: "المهام", icon: ClipboardList, path: "/tasks" },
   { label: "تقويم المهام", icon: CalendarDays, path: "/tasks-calendar" },
   { label: "لوحة كانبان", icon: Columns3, path: "/tasks-kanban" },
+  { label: "الاجتماعات", icon: Video, path: "/meetings" },
   { label: "تقارير الأداء", icon: BarChart3, path: "/reports" },
   { label: "التدفقات النقدية", icon: Wallet, path: "/cash-flow" },
   { label: "الفواتير", icon: Receipt, path: "/invoices" },
@@ -21,6 +22,7 @@ const adminNavItems = [
 
 const restrictedNavItems = [
   { label: "لوحة التحكم", icon: LayoutDashboard, path: "/" },
+  { label: "الاجتماعات", icon: Video, path: "/meetings" },
 ];
 
 export default function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile }) {

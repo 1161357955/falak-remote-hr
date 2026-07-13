@@ -28,6 +28,7 @@ import ClientPortal from '@/pages/ClientPortal';
 import WorkerReport from '@/pages/WorkerReport';
 import CompanyDetail from '@/pages/CompanyDetail';
 import WorkerDashboard from '@/pages/WorkerDashboard';
+import Meetings from '@/pages/Meetings';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -60,6 +61,7 @@ const AuthenticatedApp = () => {
           <Route path="/" element={<Dashboard />} />
           <Route path="/company/:id" element={<CompanyDetail />} />
           <Route path="/worker-dashboard" element={<WorkerDashboard />} />
+          <Route path="/meetings" element={<Meetings />} />
           <Route element={<AdminRoute />}>
             <Route path="/companies" element={<Companies />} />
             <Route path="/workers" element={<Workers />} />

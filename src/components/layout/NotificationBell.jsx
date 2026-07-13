@@ -47,7 +47,9 @@ export default function NotificationBell() {
 
   const handleNotificationClick = (n) => {
     setOpen(false);
-    if (n.task_id) {
+    if (n.meeting_id) {
+      navigate(`/meetings?meeting=${n.meeting_id}`);
+    } else if (n.task_id) {
       navigate(role === "admin" ? `/tasks?task=${n.task_id}` : `/worker-dashboard?task=${n.task_id}`);
     }
   };
