@@ -13,7 +13,7 @@ import EmptyState from "@/components/shared/EmptyState";
 import FormDialog from "@/components/shared/FormDialog";
 import { useToast } from "@/components/ui/use-toast";
 import { PROJECT_CATEGORIES, CATEGORY_TASKS } from "@/lib/projectTaskLists";
-import { Users } from "lucide-react";
+import ProjectWorkersField from "@/components/projects/ProjectWorkersField";
 
 const emptyForm = {
   title: "", description: "", company_id: "", category: "عام", status: "جديد",
@@ -48,14 +48,7 @@ export default function Projects() {
   };
 
   const getCompanyName = (id) => companies.find((c) => c.id === id)?.name || "—";
-  const getWorkerName = (id) => workers.find((w) => w.id === id)?.full_name || "";
-
-  const toggleWorker = (id) => {
-    setForm((f) => ({
-      ...f,
-      worker_ids: f.worker_ids?.includes(id) ? f.worker_ids.filter((w) => w !== id) : [...(f.worker_ids || []), id],
-    }));
-  };
+  const getWorkerNames = (ids = []) => ids.map((id) => workers.find((w) => w.id === id)?.full_name).filter(Boolean);
 
   const handleSave = async () => {
     if (!form.title || !form.company_id) {
@@ -154,10 +147,11 @@ export default function Projects() {
                 )}
                 {p.budget > 0 && <p>الميزانية: {Number(p.budget).toLocaleString()} ر.س</p>}
               </div>
-              {p.worker_ids?.length > 0 && (
-                <div className="flex items-start gap-1.5 mb-3 text-xs text-muted-foreground">
-                  <Users className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                  <span className="line-clamp-2">{p.worker_ids.map((id) => getWorkerName(id)).filter(Boolean).join("، ")}</span>
+              {getWorkerNames(p.worker_ids).length > 0 && (
+                <div className="flex flex-wrap gap-1 mb-3">
+                  {getWorkerNames(p.worker_ids).map((name) => (
+                    <span key={name} className="text-[10px] px-2 py-0.5 rounded-full bg-secondary/20 text-secondary-foreground font-medium">{name}</span>
+                  ))}
                 </div>
               )}
               <div className="mb-3">
@@ -212,18 +206,7 @@ export default function Projects() {
             <div><Label>الميزانية (ر.س)</Label><Input type="number" value={form.budget} onChange={(e) => setForm({ ...form, budget: e.target.value })} /></div>
             <div><Label>نسبة الإنجاز %</Label><Input type="number" min={0} max={100} value={form.progress} onChange={(e) => setForm({ ...form, progress: e.target.value })} /></div>
           </div>
-          <div>
-            <Label>الموظفون المعيّنون على المشروع</Label>
-            <div className="border rounded-lg p-2 max-h-40 overflow-y-auto space-y-1 mt-1.5">
-              {workers.length === 0 && <p className="text-xs text-muted-foreground p-1">لا يوجد موظفون</p>}
-              {workers.map((w) => (
-                <label key={w.id} className="flex items-center gap-2 text-sm px-1.5 py-1 rounded hover:bg-accent cursor-pointer">
-                  <input type="checkbox" checked={form.worker_ids?.includes(w.id) || false} onChange={() => toggleWorker(w.id)} />
-                  {w.full_name}
-                </label>
-              ))}
-            </div>
-          </div>
+          <ProjectWorkersField workers={workers} selectedIds={form.worker_ids} onChange={(ids) => setForm({ ...form, worker_ids: ids })} />
           <Button onClick={handleSave} className="w-full">{editId ? "تحديث" : "إنشاء"}</Button>
         </div>
       </FormDialog>
