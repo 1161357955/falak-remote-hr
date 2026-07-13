@@ -1,14 +1,32 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Hash, MessageCircle, Send, Paperclip, X, Phone } from "lucide-react";
+import { Hash, MessageCircle, Send, Paperclip, X, Phone, Video, Mic, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { base44 } from "@/api/base44Client";
+import VideoRecorderModal from "./VideoRecorderModal";
+import AudioRecorderModal from "./AudioRecorderModal";
+import { captureScreenshot } from "@/lib/captureScreenshot";
 
 export default function ChatThread({ channel, messages, currentUser, dmLabel, onSend, onStartCall }) {
   const [text, setText] = useState("");
   const [file, setFile] = useState(null);
   const [sending, setSending] = useState(false);
+  const [showVideoRecorder, setShowVideoRecorder] = useState(false);
+  const [showAudioRecorder, setShowAudioRecorder] = useState(false);
+  const [capturingScreenshot, setCapturingScreenshot] = useState(false);
   const bottomRef = useRef(null);
+
+  const handleScreenshot = async () => {
+    setCapturingScreenshot(true);
+    try {
+      const captured = await captureScreenshot();
+      setFile(captured);
+    } catch {
+      // user cancelled the screen picker or capture failed
+    } finally {
+      setCapturingScreenshot(false);
+    }
+  };
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -86,6 +104,15 @@ export default function ChatThread({ channel, messages, currentUser, dmLabel, on
             <Paperclip className="w-4 h-4" />
             <input type="file" className="hidden" onChange={(e) => setFile(e.target.files?.[0] || null)} />
           </label>
+          <button type="button" title="تسجيل فيديو (٥ دقائق كحد أقصى)" className="text-muted-foreground hover:text-foreground p-2" onClick={() => setShowVideoRecorder(true)}>
+            <Video className="w-4 h-4" />
+          </button>
+          <button type="button" title="تسجيل صوتي" className="text-muted-foreground hover:text-foreground p-2" onClick={() => setShowAudioRecorder(true)}>
+            <Mic className="w-4 h-4" />
+          </button>
+          <button type="button" title="لقطة شاشة" disabled={capturingScreenshot} className="text-muted-foreground hover:text-foreground p-2 disabled:opacity-50" onClick={handleScreenshot}>
+            <Monitor className="w-4 h-4" />
+          </button>
           <Textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -103,6 +130,13 @@ export default function ChatThread({ channel, messages, currentUser, dmLabel, on
           </Button>
         </div>
       </div>
+
+      {showVideoRecorder && (
+        <VideoRecorderModal onCapture={setFile} onClose={() => setShowVideoRecorder(false)} />
+      )}
+      {showAudioRecorder && (
+        <AudioRecorderModal onCapture={setFile} onClose={() => setShowAudioRecorder(false)} />
+      )}
     </div>
   );
 }
