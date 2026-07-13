@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Video, Plus, Trash2, Link as LinkIcon, CalendarClock, Users, X, CheckCircle2 } from "lucide-react";
+import { Video, Plus, Trash2, Link as LinkIcon, CalendarClock, Users, X, CheckCircle2, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +13,7 @@ import FormDialog from "@/components/shared/FormDialog";
 import { useToast } from "@/components/ui/use-toast";
 
 const emptyForm = {
-  title: "", description: "", meeting_type: "جماعي",
+  title: "", description: "", meeting_type: "جماعي", timing: "مجدول",
   meeting_date: "", meeting_time: "", duration_minutes: 30,
   meeting_link: "", participant_emails: [],
 };
@@ -64,7 +64,8 @@ export default function Meetings() {
   };
 
   const handleSave = async () => {
-    if (!form.title || !form.meeting_date) {
+    const isInstant = form.timing === "فوري";
+    if (!form.title || (!isInstant && !form.meeting_date)) {
       toast({ title: "خطأ", description: "عنوان الاجتماع وتاريخه مطلوبان", variant: "destructive" });
       return;
     }
@@ -74,23 +75,34 @@ export default function Meetings() {
     }
     setSaving(true);
     try {
+      const now = new Date();
+      const payload = isInstant
+        ? {
+            ...form,
+            meeting_date: now.toISOString().slice(0, 10),
+            meeting_time: now.toTimeString().slice(0, 5),
+            status: "منعقدة",
+          }
+        : form;
       const meeting = await base44.entities.Meeting.create({
-        ...form,
+        ...payload,
         organizer_name: currentUser?.full_name,
         organizer_email: currentUser?.email,
       });
       await base44.entities.Notification.bulkCreate(
         form.participant_emails.map((email) => ({
           recipient_email: email,
-          title: `دعوة اجتماع: ${form.title}`,
-          message: `بتاريخ ${form.meeting_date}${form.meeting_time ? ` - ${form.meeting_time}` : ""} من ${currentUser?.full_name || "المنظم"}`,
+          title: isInstant ? `اجتماع فوري الآن: ${form.title}` : `دعوة اجتماع: ${form.title}`,
+          message: isInstant
+            ? `${currentUser?.full_name || "المنظم"} بدأ اجتماعاً فورياً الآن${form.meeting_link ? ` - ${form.meeting_link}` : ""}`
+            : `بتاريخ ${form.meeting_date}${form.meeting_time ? ` - ${form.meeting_time}` : ""} من ${currentUser?.full_name || "المنظم"}`,
           meeting_id: meeting.id,
         }))
       );
       setDialogOpen(false);
       setForm(emptyForm);
       loadData();
-      toast({ title: "تم إنشاء الاجتماع وإشعار المشاركين" });
+      toast({ title: isInstant ? "تم بدء الاجتماع الفوري وإشعار المشاركين" : "تم إنشاء الاجتماع وإشعار المشاركين" });
     } finally {
       setSaving(false);
     }
@@ -131,6 +143,11 @@ export default function Meetings() {
                     <Video className="w-4 h-4 text-primary" />
                     <h3 className="font-bold text-sm">{m.title}</h3>
                     <span className="text-xs px-2 py-0.5 rounded-full bg-muted">{m.meeting_type}</span>
+                    {m.timing === "فوري" && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700 flex items-center gap-1">
+                        <Zap className="w-3 h-3" /> فوري
+                      </span>
+                    )}
                     <span className={`text-xs px-2 py-0.5 rounded-full ${statusColor[m.status] || ""}`}>{m.status}</span>
                   </div>
                   {m.description && <p className="text-xs text-muted-foreground mb-2">{m.description}</p>}
@@ -165,20 +182,38 @@ export default function Meetings() {
         <div className="space-y-4">
           <div><Label>عنوان الاجتماع *</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
           <div><Label>الوصف</Label><Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
-          <div>
-            <Label>نوع الاجتماع</Label>
-            <Select value={form.meeting_type} onValueChange={(v) => setForm({ ...form, meeting_type: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="جماعي">جماعي</SelectItem>
-                <SelectItem value="فردي">فردي</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
           <div className="grid grid-cols-2 gap-4">
-            <div><Label>التاريخ *</Label><Input type="date" value={form.meeting_date} onChange={(e) => setForm({ ...form, meeting_date: e.target.value })} /></div>
-            <div><Label>الوقت</Label><Input type="time" value={form.meeting_time} onChange={(e) => setForm({ ...form, meeting_time: e.target.value })} /></div>
+            <div>
+              <Label>نوع الاجتماع</Label>
+              <Select value={form.meeting_type} onValueChange={(v) => setForm({ ...form, meeting_type: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="جماعي">جماعي</SelectItem>
+                  <SelectItem value="فردي">فردي</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>التوقيت</Label>
+              <Select value={form.timing} onValueChange={(v) => setForm({ ...form, timing: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="مجدول">مجدول</SelectItem>
+                  <SelectItem value="فوري">فوري (الآن)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+          {form.timing === "فوري" ? (
+            <p className="text-xs text-muted-foreground bg-red-50 border border-red-100 rounded-lg p-3 flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 text-red-500" /> سيبدأ الاجتماع فوراً الآن وسيُشعر جميع المشاركين مباشرة.
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>التاريخ *</Label><Input type="date" value={form.meeting_date} onChange={(e) => setForm({ ...form, meeting_date: e.target.value })} /></div>
+              <div><Label>الوقت</Label><Input type="time" value={form.meeting_time} onChange={(e) => setForm({ ...form, meeting_time: e.target.value })} /></div>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-4">
             <div><Label>المدة (دقيقة)</Label><Input type="number" value={form.duration_minutes} onChange={(e) => setForm({ ...form, duration_minutes: Number(e.target.value) })} /></div>
             <div><Label>رابط الاجتماع (اختياري)</Label><Input value={form.meeting_link} onChange={(e) => setForm({ ...form, meeting_link: e.target.value })} placeholder="https://..." /></div>
@@ -213,7 +248,8 @@ export default function Meetings() {
             )}
           </div>
           <Button onClick={handleSave} disabled={saving} className="w-full gap-2">
-            <CheckCircle2 className="w-4 h-4" /> {saving ? "جارٍ الإنشاء..." : "إنشاء الاجتماع"}
+            {form.timing === "فوري" ? <Zap className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
+            {saving ? "جارٍ الإنشاء..." : form.timing === "فوري" ? "بدء الاجتماع الآن" : "إنشاء الاجتماع"}
           </Button>
         </div>
       </FormDialog>

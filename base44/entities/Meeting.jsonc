@@ -19,6 +19,15 @@
       ],
       "default": "\u062c\u0645\u0627\u0639\u064a"
     },
+    "timing": {
+      "type": "string",
+      "title": "\u062a\u0648\u0642\u064a\u062a \u0627\u0644\u0627\u062c\u062a\u0645\u0627\u0639",
+      "enum": [
+        "\u0641\u0648\u0631\u064a",
+        "\u0645\u062c\u062f\u0648\u0644"
+      ],
+      "default": "\u0645\u062c\u062f\u0648\u0644"
+    },
     "organizer_name": {
       "type": "string",
       "title": "\u0627\u0644\u0645\u0646\u0638\u0645"
