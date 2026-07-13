@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { ClipboardList, FolderKanban, CheckCircle2, Clock, Search } from "lucide-react";
+import { ClipboardList, FolderKanban, CheckCircle2, Clock, Search, MessageSquare } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import TaskCommentsDialog from "@/components/tasks/TaskCommentsDialog";
 
 const STATUS_OPTIONS = ["جديدة", "قيد التنفيذ", "مكتملة", "ملغاة"];
 
@@ -22,6 +24,8 @@ export default function WorkerDashboard() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [commentsOpen, setCommentsOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -44,11 +48,24 @@ export default function WorkerDashboard() {
         const allProjects = await base44.entities.Project.list();
         setProjects(allProjects.filter((p) => projectIds.includes(p.id)));
       }
+      const taskParam = new URLSearchParams(window.location.search).get("task");
+      if (taskParam) {
+        const found = workerTasks.find((t) => t.id === taskParam);
+        if (found) {
+          setSelectedTask(found);
+          setCommentsOpen(true);
+        }
+      }
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleOpenComments = (task) => {
+    setSelectedTask(task);
+    setCommentsOpen(true);
   };
 
   if (loading) {
@@ -138,19 +155,26 @@ export default function WorkerDashboard() {
                   <p className="text-sm font-medium">{task.title}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{task.due_date || "بدون تاريخ"}</p>
                 </div>
-                <Select value={task.status} onValueChange={(val) => handleStatusChange(task.id, val)}>
-                  <SelectTrigger className={`w-40 h-8 text-xs border-0 font-medium ${STATUS_COLORS[task.status] || "bg-gray-100 text-gray-700"}`}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenComments(task)}>
+                    <MessageSquare className="w-4 h-4" />
+                  </Button>
+                  <Select value={task.status} onValueChange={(val) => handleStatusChange(task.id, val)}>
+                    <SelectTrigger className={`w-40 h-8 text-xs border-0 font-medium ${STATUS_COLORS[task.status] || "bg-gray-100 text-gray-700"}`}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      <TaskCommentsDialog open={commentsOpen} onOpenChange={setCommentsOpen} task={selectedTask} />
     </div>
   );
 }

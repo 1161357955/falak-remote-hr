@@ -53,7 +53,7 @@ export default function Tasks() {
   const [filterStatus, setFilterStatus] = useState("الكل");
   const [filterProject, setFilterProject] = useState(() => new URLSearchParams(window.location.search).get("project") || "الكل");
   const [filterCompany] = useState(() => new URLSearchParams(window.location.search).get("company") || null);
-  const [expandedId, setExpandedId] = useState(null);
+  const [expandedId, setExpandedId] = useState(() => new URLSearchParams(window.location.search).get("task") || null);
   const [generating, setGenerating] = useState(false);
   const [generatingDefaults, setGeneratingDefaults] = useState(false);
   const [sortBy, setSortBy] = useState("due_date");

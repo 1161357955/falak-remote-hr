@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Bell } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -6,10 +7,14 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/compon
 export default function NotificationBell() {
   const [notifications, setNotifications] = useState([]);
   const [email, setEmail] = useState(null);
+  const [role, setRole] = useState(null);
+  const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     base44.auth.me().then((user) => {
       setEmail(user.email);
+      setRole(user.role);
       base44.entities.Notification.filter({ recipient_email: user.email }, "-created_date").then(setNotifications);
     });
   }, []);
@@ -29,8 +34,9 @@ export default function NotificationBell() {
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
-  const handleOpenChange = async (open) => {
-    if (open) {
+  const handleOpenChange = async (isOpen) => {
+    setOpen(isOpen);
+    if (isOpen) {
       const unread = notifications.filter((n) => !n.is_read);
       if (unread.length > 0) {
         await Promise.all(unread.map((n) => base44.entities.Notification.update(n.id, { is_read: true })));
@@ -39,8 +45,15 @@ export default function NotificationBell() {
     }
   };
 
+  const handleNotificationClick = (n) => {
+    setOpen(false);
+    if (n.task_id) {
+      navigate(role === "admin" ? `/tasks?task=${n.task_id}` : `/worker-dashboard?task=${n.task_id}`);
+    }
+  };
+
   return (
-    <DropdownMenu onOpenChange={handleOpenChange}>
+    <DropdownMenu open={open} onOpenChange={handleOpenChange}>
       <DropdownMenuTrigger className="relative p-2 rounded-lg hover:bg-accent">
         <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
@@ -54,11 +67,15 @@ export default function NotificationBell() {
           <p className="text-sm text-muted-foreground text-center py-6">لا توجد إشعارات</p>
         ) : (
           notifications.map((n) => (
-            <div key={n.id} className={`px-3 py-2 border-b last:border-0 ${!n.is_read ? "bg-accent/50" : ""}`}>
+            <button
+              key={n.id}
+              onClick={() => handleNotificationClick(n)}
+              className={`w-full text-right px-3 py-2 border-b last:border-0 hover:bg-accent transition-colors ${!n.is_read ? "bg-accent/50" : ""}`}
+            >
               <p className="text-sm font-medium">{n.title}</p>
               {n.message && <p className="text-xs text-muted-foreground mt-0.5">{n.message}</p>}
               <p className="text-[10px] text-muted-foreground mt-1">{new Date(n.created_date).toLocaleString("ar-SA")}</p>
-            </div>
+            </button>
           ))
         )}
       </DropdownMenuContent>
