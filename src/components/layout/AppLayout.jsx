@@ -4,14 +4,18 @@ import { Menu, Star } from "lucide-react";
 import Sidebar from "./Sidebar";
 import NotificationBell from "./NotificationBell";
 import PresenceHeartbeat from "./PresenceHeartbeat";
+import NotificationWatcher from "./NotificationWatcher";
+import { CallProvider } from "@/lib/CallContext";
 
 export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
+    <CallProvider>
     <div className="min-h-screen bg-background">
       <PresenceHeartbeat />
+      <NotificationWatcher />
       <Sidebar
         collapsed={collapsed}
         onToggleCollapse={() => setCollapsed((c) => !c)}
@@ -42,5 +46,6 @@ export default function AppLayout() {
         </div>
       </main>
     </div>
+    </CallProvider>
   );
 }

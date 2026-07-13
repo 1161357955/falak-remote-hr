@@ -56,6 +56,12 @@ export default function CallModal({ channelId, currentUser, peerEmail, peerName,
           type: "offer",
           payload: JSON.stringify(offer),
         });
+        await base44.entities.Notification.create({
+          recipient_email: peerEmail,
+          title: `مكالمة واردة من ${currentUser.full_name}`,
+          message: "اضغط للانضمام إلى المكالمة",
+          channel_id: channelId,
+        });
       } else {
         await pc.setRemoteDescription(new RTCSessionDescription(incomingOffer));
         const answer = await pc.createAnswer();
