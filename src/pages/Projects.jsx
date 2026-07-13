@@ -56,7 +56,10 @@ export default function Projects() {
       return;
     }
     const data = { ...form, budget: form.budget ? Number(form.budget) : undefined, progress: Number(form.progress) };
+    let newlyAssignedIds = data.worker_ids || [];
     if (editId) {
+      const prevProject = projects.find((p) => p.id === editId);
+      newlyAssignedIds = (data.worker_ids || []).filter((id) => !(prevProject?.worker_ids || []).includes(id));
       await base44.entities.Project.update(editId, data);
     } else {
       const newProject = await base44.entities.Project.create(data);
@@ -66,6 +69,16 @@ export default function Projects() {
           taskList.map((title) => ({ title, project_id: newProject.id, status: "جديدة" }))
         );
       }
+    }
+    const notifyWorkers = workers.filter((w) => newlyAssignedIds.includes(w.id) && w.email);
+    if (notifyWorkers.length > 0) {
+      await base44.entities.Notification.bulkCreate(
+        notifyWorkers.map((w) => ({
+          recipient_email: w.email,
+          title: `تم تعيينك على مشروع: ${data.title}`,
+          message: `تمت إضافتك كموظف مسؤول في مشروع "${data.title}"`,
+        }))
+      );
     }
     setDialogOpen(false);
     setForm(emptyForm);

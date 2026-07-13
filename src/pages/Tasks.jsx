@@ -90,8 +90,27 @@ export default function Tasks() {
       estimated_hours: (estimated_h || estimated_m) ? hmToDecimal(estimated_h, estimated_m) : undefined,
       actual_hours: hmToDecimal(actual_h, actual_m),
     };
-    if (editId) await base44.entities.Task.update(editId, data);
-    else await base44.entities.Task.create(data);
+    let notifyWorkerEmail = null;
+    let taskId = editId;
+    if (editId) {
+      const prevTask = tasks.find((t) => t.id === editId);
+      if (data.worker_id && data.worker_id !== prevTask?.worker_id) {
+        notifyWorkerEmail = workers.find((w) => w.id === data.worker_id)?.email;
+      }
+      await base44.entities.Task.update(editId, data);
+    } else {
+      const created = await base44.entities.Task.create(data);
+      taskId = created.id;
+      if (data.worker_id) notifyWorkerEmail = workers.find((w) => w.id === data.worker_id)?.email;
+    }
+    if (notifyWorkerEmail) {
+      await base44.entities.Notification.create({
+        recipient_email: notifyWorkerEmail,
+        title: `تم تعيينك على مهمة: ${data.title}`,
+        message: `تم إسناد مهمة "${data.title}" إليك`,
+        task_id: taskId,
+      });
+    }
     setDialogOpen(false);
     setForm(emptyForm);
     setEditId(null);
