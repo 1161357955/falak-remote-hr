@@ -19,7 +19,14 @@ export default function CallModal({ channelId, currentUser, peerEmail, peerName,
   useEffect(() => {
     let unsubscribe;
     const setup = async () => {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+      } catch (err) {
+        alert("تعذر الوصول إلى الكاميرا أو الميكروفون. تأكد من منح الأذونات اللازمة.");
+        onClose();
+        return;
+      }
       localStreamRef.current = stream;
       if (localVideoRef.current) localVideoRef.current.srcObject = stream;
 
@@ -91,7 +98,7 @@ export default function CallModal({ channelId, currentUser, peerEmail, peerName,
         base44.entities.CallSignal.delete(s.id);
       });
     };
-    setup();
+    setup().catch(() => { onClose(); });
 
     return () => {
       unsubscribe?.();
@@ -120,7 +127,12 @@ export default function CallModal({ channelId, currentUser, peerEmail, peerName,
 
   const toggleScreenShare = async () => {
     if (!isScreenSharing) {
-      const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+      let screenStream;
+      try {
+        screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+      } catch (err) {
+        return;
+      }
       const screenTrack = screenStream.getVideoTracks()[0];
       screenTrackRef.current = screenTrack;
       const sender = pcRef.current.getSenders().find((s) => s.track && s.track.kind === "video");
